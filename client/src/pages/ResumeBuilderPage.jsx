@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
-import { Download, Eye, EyeOff, FileDown, Camera, Trash2 } from 'lucide-react';
+import { Download, Eye, EyeOff, FileDown, Camera, Trash2, Wand2 } from 'lucide-react';
 import {
   Document, Page, Text, View, StyleSheet, Link, PDFDownloadLink, PDFViewer, Image as PDFImage
 } from '@react-pdf/renderer';
@@ -240,6 +240,22 @@ export default function ResumeBuilderPage() {
   const [showPreview, setShowPreview] = useState(true);
   const [photoPrompt, setPhotoPrompt] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [isEnhancing, setIsEnhancing] = useState(false);
+
+  const handleEnhance = async () => {
+    setIsEnhancing(true);
+    try {
+      const { data } = await api.post('/ai/enhance-profile');
+      if (data.success) {
+        updateUser({ ...user, profile: data.profile });
+        toast.success('Resume enhanced by System!');
+      }
+    } catch (err) {
+      toast.error('Enhancement failed');
+    } finally {
+      setIsEnhancing(false);
+    }
+  };
 
   const tpl = TEMPLATES.find(t => t.id === template) || TEMPLATES[0];
   const hasPhoto = !!user?.avatar;
@@ -276,9 +292,14 @@ export default function ResumeBuilderPage() {
 
   return (
     <div style={{ padding: '24px 28px', maxWidth: 1280, margin: '0 auto' }}>
-      <div style={{ marginBottom: 20 }} className="animate-fade-in">
-        <h1 style={{ fontFamily: 'Plus Jakarta Sans', fontSize: 24, fontWeight: 800, marginBottom: 4 }}>Resume Builder</h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>Choose a template, preview your resume, and download as PDF.</p>
+      <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} className="animate-fade-in">
+        <div>
+          <h1 style={{ fontFamily: 'Plus Jakarta Sans', fontSize: 24, fontWeight: 800, marginBottom: 4 }}>Resume Builder</h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>Choose a template, preview your resume, and download as PDF.</p>
+        </div>
+        <button className="btn-primary" onClick={handleEnhance} disabled={isEnhancing}>
+          {isEnhancing ? <><div className="loader" style={{width: 16, height: 16}} /> Enhancing...</> : <><Wand2 size={16} /> Enhance with System</>}
+        </button>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: 20, alignItems: 'start' }}>

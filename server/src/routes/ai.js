@@ -17,4 +17,34 @@ router.post('/skills-gap', protect, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+router.post('/enhance-profile', protect, async (req, res, next) => {
+  try {
+    const User = require('../models/User');
+    const { enhanceProfile } = require('../services/aiService');
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    
+    const enhanced = await enhanceProfile(user.profile);
+    
+    if (enhanced.workExperience) {
+      user.profile.workExperience.forEach((exp, i) => {
+        if (enhanced.workExperience[i]) {
+          exp.description = enhanced.workExperience[i].description || exp.description;
+        }
+      });
+    }
+    if (enhanced.projects) {
+      user.profile.projects.forEach((proj, i) => {
+        if (enhanced.projects[i]) {
+          proj.description = enhanced.projects[i].description || proj.description;
+          if (enhanced.projects[i].highlights) proj.highlights = enhanced.projects[i].highlights;
+        }
+      });
+    }
+    
+    await user.save();
+    res.json({ success: true, profile: user.profile });
+  } catch (err) { next(err); }
+});
+
 module.exports = router;

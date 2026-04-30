@@ -1,11 +1,28 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../services/api';
-import { FileText, Upload, Wand2, Trash2, Download, Eye, Clock } from 'lucide-react';
+import { FileText, Upload, Wand2, Trash2, Download, Eye, Clock, FileDown } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import toast from 'react-hot-toast';
+import { Document, Page, Text, View, StyleSheet, PDFDownloadLink } from '@react-pdf/renderer';
 
 const fmtDate = d => new Date(d).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+
+const SimplePDF = ({ text, title }) => {
+  const styles = StyleSheet.create({
+    page: { padding: 40, fontFamily: 'Helvetica', fontSize: 11, lineHeight: 1.6, color: '#333' },
+    title: { fontSize: 16, fontFamily: 'Helvetica-Bold', marginBottom: 20, color: '#4F46E5', borderBottom: '1px solid #e5e7eb', paddingBottom: 10 },
+    content: { fontSize: 10, fontFamily: 'Helvetica' }
+  });
+  return (
+    <Document title={title}>
+      <Page size="A4" style={styles.page}>
+        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.content}>{text}</Text>
+      </Page>
+    </Document>
+  );
+};
 
 export default function CvTailoringPage() {
   const qc = useQueryClient();
@@ -140,10 +157,27 @@ export default function CvTailoringPage() {
                 <button className="btn-ghost" style={{ padding:'6px 10px' }} onClick={() => setViewing(viewing?._id===v._id?null:v)}>
                   <Eye size={14} />
                 </button>
-                {v.pdfUrl && (
-                  <a href={v.pdfUrl} target="_blank" rel="noreferrer" className="btn-ghost" style={{ padding:'6px 10px' }}>
+                {v.pdfUrl ? (
+                  <a href={v.pdfUrl} target="_blank" rel="noreferrer" className="btn-ghost" style={{ padding:'6px 10px' }} title="Download Base PDF">
                     <Download size={14} />
                   </a>
+                ) : (
+                  <>
+                    <button className="btn-ghost" style={{ padding:'6px 10px' }} title="Download Text" onClick={() => {
+                      const blob = new Blob([v.tailoredContent], { type: 'text/plain' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a'); a.href = url; a.download = `${v.label}.txt`; a.click();
+                    }}>
+                      <FileText size={14} />
+                    </button>
+                    <PDFDownloadLink document={<SimplePDF text={v.tailoredContent} title={v.label} />} fileName={`${v.label}.pdf`} style={{ textDecoration: 'none' }}>
+                      {({ loading }) => (
+                        <button className="btn-ghost" style={{ padding:'6px 10px', opacity: loading ? 0.5 : 1 }} title="Download PDF" disabled={loading}>
+                          <FileDown size={14} />
+                        </button>
+                      )}
+                    </PDFDownloadLink>
+                  </>
                 )}
                 {!v.isBase && (
                   <button className="btn-ghost" style={{ padding:'6px 10px',color:'#ef4444' }} onClick={() => handleDelete(v._id)}>

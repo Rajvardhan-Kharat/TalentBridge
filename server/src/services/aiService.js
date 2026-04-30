@@ -124,8 +124,24 @@ Recommendation: "Apply" if overallScore >= 3.5, else "Skip"`;
 };
 
 // ════════════════════════════════════════════════════════════════════════
-// MODULE 3: CV Tailoring
+// MODULE 3: CV Tailoring & Profile Enhancement
 // ════════════════════════════════════════════════════════════════════════
+const enhanceProfile = async (profile) => {
+  const system = `You are a world-class ATS-optimized resume writer and career strategist.
+Enhance the provided JSON profile (workExperience, projects).
+1. Rewrite descriptions using strong action verbs.
+2. Quantify impact where possible.
+3. Optimize for ATS tracking.
+4. ONLY return valid JSON matching exactly this structure:
+{
+  "workExperience": [{ "title": "", "company": "", "description": "" }],
+  "projects": [{ "title": "", "description": "", "highlights": "" }]
+}`;
+  const user = JSON.stringify({ workExperience: profile.workExperience || [], projects: profile.projects || [] });
+  const raw = await callAI(system, user, 3000);
+  return extractJSON(raw);
+};
+
 const tailorCv = async (jobDescription, cvText) => {
   const system = `You are a world-class ATS-optimized resume writer and career strategist.
 Rewrite CVs to maximize ATS pass-through and recruiter engagement.
@@ -563,9 +579,11 @@ Include 8-10 in-demand skills. Be specific to the Indian job market.`;
 
 module.exports = {
   callAI,
-  evaluateJob,
-  tailorCv,
-  runPromptTool,
-  computeMatchScore,
+  extractJSON,
   analyzeSkillsGap,
+  evaluateJobScore: computeMatchScore,
+  tailorCv,
+  enhanceProfile,
+  runPromptTool,
+  computeMatchScore
 };
