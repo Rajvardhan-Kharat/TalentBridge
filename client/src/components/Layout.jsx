@@ -1,9 +1,10 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useState, useEffect } from 'react';
 import {
   LayoutDashboard, Search, Brain, FileText, Wand2,
   Globe, Kanban, BookOpen, LogOut, Sparkles, ChevronRight,
-  User, Crown, Star, FileDown
+  User, Crown, Star, FileDown, Moon, Sun
 } from 'lucide-react';
 
 const navItems = [
@@ -49,6 +50,16 @@ export default function Layout() {
   const navigate = useNavigate();
   const plan = user?.subscription?.plan || 'free';
   const pm = PLAN_META[plan];
+  
+  const [isDark, setIsDark] = useState(() => {
+    const saved = localStorage.getItem('hi_theme');
+    return saved ? saved === 'dark' : true;
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    localStorage.setItem('hi_theme', isDark ? 'dark' : 'light');
+  }, [isDark]);
 
   const handleLogout = () => { logout(); navigate('/login'); };
 
@@ -138,6 +149,9 @@ export default function Layout() {
               <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name}</div>
               <div style={{ fontSize: 10, color: pm.color, fontWeight: 600 }}>{pm.badge} {pm.label}</div>
             </div>
+            <button onClick={() => setIsDark(!isDark)} className="btn-ghost" style={{ padding: '5px', color: isDark ? 'var(--text-muted)' : '#f59e0b' }}>
+              {isDark ? <Sun size={13} /> : <Moon size={13} />}
+            </button>
             <button onClick={handleLogout} className="btn-ghost" style={{ padding: '5px' }}><LogOut size={13} /></button>
           </div>
         </div>
