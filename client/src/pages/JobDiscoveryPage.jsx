@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
-import { Search, Filter, MapPin, Building, DollarSign, Zap, ExternalLink, Bookmark, ChevronDown } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { Search, MapPin, Building, DollarSign, ExternalLink, Bookmark, ChevronDown, Sparkles, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const fmtSalary = (min, max) => {
@@ -19,6 +20,34 @@ const GradeBadge = ({ grade, score }) => (
 
 const JobCard = ({ job, onTrack }) => {
   const [expanded, setExpanded] = useState(false);
+  const [checkLoading, setCheckLoading] = useState(false);
+  const [readiness, setReadiness] = useState(null);
+  const [showReadiness, setShowReadiness] = useState(false);
+
+  const handleReadyCheck = async () => {
+    if (readiness) { setShowReadiness(v => !v); return; }
+    if (!job.description || job.description.length < 50) {
+      toast.error('Not enough job description to analyse'); return;
+    }
+    setCheckLoading(true);
+    try {
+      const { data } = await api.post('/ai/ready-check', { jobDescription: job.description });
+      setReadiness(data.result);
+      setShowReadiness(true);
+    } catch { toast.error('Could not run check'); }
+    finally { setCheckLoading(false); }
+  };
+
+  const verdictBg = readiness?.verdictColor === 'green' ? 'rgba(16,185,129,0.08)'
+    : readiness?.verdictColor === 'yellow' ? 'rgba(245,158,11,0.08)'
+    : 'rgba(239,68,68,0.08)';
+  const verdictBorder = readiness?.verdictColor === 'green' ? 'rgba(16,185,129,0.25)'
+    : readiness?.verdictColor === 'yellow' ? 'rgba(245,158,11,0.25)'
+    : 'rgba(239,68,68,0.25)';
+  const verdictColor = readiness?.verdictColor === 'green' ? '#10b981'
+    : readiness?.verdictColor === 'yellow' ? '#f59e0b'
+    : '#ef4444';
+
   return (
     <div className="glass animate-fade-in" style={{ padding:'20px',transition:'transform 0.2s,box-shadow 0.2s',marginBottom:12 }}
       onMouseEnter={e => e.currentTarget.style.transform='translateY(-1px)'}
@@ -63,14 +92,29 @@ const JobCard = ({ job, onTrack }) => {
           )}
 
           {/* Actions */}
-          <div style={{ display:'flex',gap:8,marginTop:14,alignItems:'center' }}>
+          <div style={{ display:'flex',gap:8,marginTop:14,alignItems:'center',flexWrap:'wrap' }}>
             {job.applyUrl && (
-              <a href={job.applyUrl} target="_blank" rel="noreferrer" className="btn-primary" style={{ padding:'7px 14px',fontSize:12,textDecoration:'none' }}>
-                Apply Now <ExternalLink size={12} />
+              <a href={job.applyUrl} target="_blank" rel="noreferrer noopener" className="btn-primary" style={{ padding:'7px 14px',fontSize:12,textDecoration:'none' }}>
+                {job.sourcePortal === 'Adzuna' ? 'View Job' : 'Apply Now'} <ExternalLink size={12} />
               </a>
             )}
+            {/* Fallback: always provide a Google Jobs search link */}
+            <a href={`https://www.google.com/search?q=${encodeURIComponent(`${job.title} ${job.company} job`)}+site:linkedin.com+OR+site:naukri.com+OR+site:indeed.co.in`}
+              target="_blank" rel="noreferrer noopener"
+              style={{ padding:'7px 12px',fontSize:12,textDecoration:'none',color:'var(--text-muted)',border:'1px solid var(--border)',borderRadius:8,display:'flex',alignItems:'center',gap:5,transition:'all 0.2s' }}
+              onMouseEnter={e => e.currentTarget.style.borderColor='#6366f1'}
+              onMouseLeave={e => e.currentTarget.style.borderColor='var(--border)'}
+              title="Search this job on LinkedIn, Naukri, Indeed">
+              🔍 Find on Job Sites
+            </a>
             <button className="btn-secondary" onClick={() => onTrack(job)} style={{ padding:'7px 14px',fontSize:12 }}>
               <Bookmark size={12} /> Track
+            </button>
+            <button className="btn-ghost" onClick={handleReadyCheck} disabled={checkLoading}
+              style={{ padding:'7px 12px',fontSize:12,color: readiness ? verdictColor : undefined }}
+              title="Check if you are ready for this job">
+              {checkLoading ? <><div className="loader" style={{width:12,height:12}} /> Checking...</>
+                : <><ShieldCheck size={12} /> {readiness ? readiness.readinessScore+'% Ready' : 'Am I Ready?'}</> }
             </button>
             <button className="btn-ghost" onClick={() => setExpanded(!expanded)} style={{ padding:'7px 12px',fontSize:12 }}>
               <ChevronDown size={12} style={{ transform:expanded?'rotate(180deg)':'none',transition:'transform 0.2s' }} /> Details
@@ -81,6 +125,50 @@ const JobCard = ({ job, onTrack }) => {
               </span>
             )}
           </div>
+
+          {/* Am I Ready? Result Panel */}
+          {showReadiness && readiness && (
+            <div className="animate-fade-in" style={{ marginTop:14,padding:'16px',background:verdictBg,borderRadius:12,border:`1px solid ${verdictBorder}` }}>
+              <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12 }}>
+                <div style={{ display:'flex',alignItems:'center',gap:10 }}>
+                  <div style={{ position:'relative',width:52,height:52 }}>
+                    <svg viewBox="0 0 36 36" style={{ width:52,height:52,transform:'rotate(-90deg)' }}>
+                      <circle cx="18" cy="18" r="16" fill="none" stroke="var(--bg-elevated)" strokeWidth="3" />
+                      <circle cx="18" cy="18" r="16" fill="none" stroke={verdictColor} strokeWidth="3"
+                        strokeDasharray={`${(readiness.readinessScore/100)*100.5} 100.5`} strokeLinecap="round" />
+                    </svg>
+                    <span style={{ position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',fontSize:11,fontWeight:800,color:verdictColor }}>{readiness.readinessScore}%</span>
+                  </div>
+                  <div>
+                    <div style={{ fontSize:14,fontWeight:800,color:verdictColor }}>{readiness.verdict}</div>
+                    <div style={{ fontSize:11,color:'var(--text-muted)',marginTop:2 }}>{readiness.applyAdvice}</div>
+                  </div>
+                </div>
+                <button className="btn-ghost" onClick={() => setShowReadiness(false)} style={{ fontSize:12,padding:'4px 8px' }}>✕</button>
+              </div>
+              <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:10 }}>
+                {readiness.matchedRequirements?.length > 0 && (
+                  <div>
+                    <div style={{ fontSize:11,fontWeight:700,color:'#10b981',marginBottom:5 }}>✅ You have</div>
+                    {readiness.matchedRequirements.slice(0,3).map(r => <div key={r} style={{ fontSize:11,color:'var(--text-secondary)',padding:'2px 0' }}>• {r}</div>)}
+                  </div>
+                )}
+                {readiness.missingRequirements?.length > 0 && (
+                  <div>
+                    <div style={{ fontSize:11,fontWeight:700,color:'#f59e0b',marginBottom:5 }}>⚠️ Missing</div>
+                    {readiness.missingRequirements.slice(0,3).map(r => <div key={r} style={{ fontSize:11,color:'var(--text-secondary)',padding:'2px 0' }}>• {r}</div>)}
+                  </div>
+                )}
+              </div>
+              {readiness.quickWins?.length > 0 && (
+                <div style={{ marginTop:10,padding:'8px 10px',background:'rgba(99,102,241,0.06)',borderRadius:8,border:'1px solid rgba(99,102,241,0.1)' }}>
+                  <div style={{ fontSize:11,fontWeight:700,color:'#818cf8',marginBottom:4 }}>🚀 Quick Wins</div>
+                  {readiness.quickWins.slice(0,2).map(w => <div key={w} style={{ fontSize:11,color:'var(--text-muted)',padding:'2px 0' }}>→ {w}</div>)}
+                </div>
+              )}
+            </div>
+          )}
+
         </div>
       </div>
     </div>
@@ -88,16 +176,34 @@ const JobCard = ({ job, onTrack }) => {
 };
 
 export default function JobDiscoveryPage() {
-  const [filters, setFilters] = useState({ q:'',location:'',locationType:'',jobType:'',minMatch:'' });
-  const [applied, setApplied] = useState(filters);
+  const { user } = useAuth();
+  const userSkillNames = (user?.profile?.skills || []).map(s => s.name || s);
+  const userTargetRoles = user?.profile?.targetRoles || [];
+
+  // Auto-build a smart default query from user's profile
+  const defaultQuery = userTargetRoles[0] || userSkillNames.slice(0, 2).join(' ') || '';
+  const isPersonalised = !!defaultQuery;
+
+  const [filters, setFilters] = useState({ q: defaultQuery, location: '', locationType: '', jobType: '', minMatch: '' });
+  const [applied, setApplied] = useState({ q: defaultQuery, location: '', locationType: '', jobType: '', minMatch: '' });
   const [showHigh, setShowHigh] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+
+  // Re-init when user profile loads
+  useEffect(() => {
+    if (user && !hasSearched) {
+      const q = userTargetRoles[0] || userSkillNames.slice(0, 2).join(' ') || '';
+      setFilters(f => ({ ...f, q }));
+      setApplied(f => ({ ...f, q }));
+    }
+  }, [user?.profile]);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['jobs', applied],
     queryFn: () => {
       const params = new URLSearchParams();
-      Object.entries(applied).forEach(([k,v]) => { if(v) params.set(k,v); });
-      if(showHigh) params.set('minMatch','4');
+      Object.entries(applied).forEach(([k, v]) => { if (v) params.set(k, v); });
+      if (showHigh) params.set('minMatch', '4');
       return api.get(`/jobs?${params}`).then(r => r.data);
     },
   });
@@ -115,13 +221,17 @@ export default function JobDiscoveryPage() {
   return (
     <div style={{ padding:'28px 32px', maxWidth:900, margin:'0 auto' }}>
       {/* Header */}
-      <div style={{ marginBottom:24 }} className="animate-fade-in">
-        <div style={{ display:'flex',alignItems:'center',gap:8,marginBottom:6 }}>
+      <div style={{ marginBottom: 24 }} className="animate-fade-in">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
           <Search size={18} color="#818cf8" />
-          <span style={{ fontSize:12,color:'#818cf8',fontWeight:600,letterSpacing:1 }}>MODULE 1 — JOB DISCOVERY</span>
+          <span style={{ fontSize: 12, color: '#818cf8', fontWeight: 600, letterSpacing: 1 }}>MODULE 1 — JOB DISCOVERY</span>
         </div>
-        <h1 style={{ fontFamily:'Plus Jakarta Sans',fontSize:26,fontWeight:800,marginBottom:4 }}>Find Your Perfect Job</h1>
-        <p style={{ color:'var(--text-secondary)',fontSize:14 }}>Smart skills-based matching — not just keywords</p>
+        <h1 style={{ fontFamily: 'Plus Jakarta Sans', fontSize: 26, fontWeight: 800, marginBottom: 4 }}>Find Your Perfect Job</h1>
+        <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>
+          {isPersonalised
+            ? <><Sparkles size={13} style={{ verticalAlign: 'middle', color: '#818cf8' }} /> Showing jobs matched to your profile — {userSkillNames.slice(0, 3).join(', ')}</>
+            : 'Smart skills-based matching — not just keywords'}
+        </p>
       </div>
 
       {/* Search Bar */}

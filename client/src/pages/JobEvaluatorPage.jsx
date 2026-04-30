@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import api from '../services/api';
-import { Brain, CheckCircle, XCircle, AlertCircle, ChevronDown, ChevronUp, Plus } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { Brain, CheckCircle, XCircle, AlertCircle, ChevronDown, ChevronUp, Plus, User, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer } from 'recharts';
 
 const DIMENSIONS = [
   { key:'skills_match',             label:'Skills Match' },
@@ -30,11 +32,15 @@ const ScoreBar = ({ score }) => {
 };
 
 export default function JobEvaluatorPage() {
+  const { user } = useAuth();
   const [jd, setJd] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [expanded, setExpanded] = useState({});
   const [saved, setSaved] = useState(false);
+
+  const skills = (user?.profile?.skills || []).map(s => s.name || s);
+  const targetRole = user?.profile?.targetRoles?.[0] || user?.profile?.currentTitle || null;
 
   const evaluate = async () => {
     if (!jd.trim()) { toast.error('Please paste a job description'); return; }
@@ -75,18 +81,42 @@ export default function JobEvaluatorPage() {
 
       {/* Input */}
       <div className="glass animate-fade-in" style={{ padding:'24px',marginBottom:20 }}>
+        {/* Profile context bar */}
+        {(skills.length > 0 || targetRole) && (
+          <div style={{ display:'flex',alignItems:'center',gap:8,padding:'8px 12px',background:'rgba(99,102,241,0.08)',border:'1px solid rgba(99,102,241,0.15)',borderRadius:10,marginBottom:14,flexWrap:'wrap',gap:8 }}>
+            <User size={13} color="#818cf8" />
+            <span style={{ fontSize:11,color:'#818cf8',fontWeight:600 }}>Evaluating against your profile:</span>
+            {targetRole && <span style={{ fontSize:11,color:'var(--text-muted)',background:'var(--bg-elevated)',padding:'2px 8px',borderRadius:20 }}>🎯 {targetRole}</span>}
+            {skills.slice(0,4).map(s => <span key={s} style={{ fontSize:11,color:'var(--text-muted)',background:'var(--bg-elevated)',padding:'2px 8px',borderRadius:20 }}>{s}</span>)}
+            {skills.length > 4 && <span style={{ fontSize:11,color:'var(--text-muted)' }}>+{skills.length-4} more skills</span>}
+          </div>
+        )}
         <label style={{ fontSize:13,fontWeight:600,color:'var(--text-secondary)',display:'block',marginBottom:8 }}>
-          Paste Job Description or Job URL content
+          Paste Job Description
         </label>
         <textarea className="input" rows={8} placeholder="Paste the full job description here... Include requirements, responsibilities, company info, and any salary information for the most accurate evaluation."
           value={jd} onChange={e => setJd(e.target.value)} style={{ minHeight:180 }} />
         <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:12 }}>
-          <span style={{ fontSize:12,color:'var(--text-muted)' }}>{jd.length} characters</span>
+          <span style={{ fontSize:12,color:'var(--text-muted)' }}>{jd.length} characters {jd.length < 200 && jd.length > 0 ? '⚠️ Add more for accurate results' : ''}</span>
           <button className="btn-primary" onClick={evaluate} disabled={loading || !jd.trim()} style={{ minWidth:160,justifyContent:'center' }}>
             {loading ? <><div className="loader" style={{width:16,height:16}} /> Analyzing...</> : <><Brain size={16} /> Evaluate Job</>}
           </button>
         </div>
       </div>
+
+      {/* Loading animation */}
+      {loading && (
+        <div className="glass animate-fade-in" style={{ padding:'40px',textAlign:'center',marginBottom:20 }}>
+          <div style={{ display:'flex',justifyContent:'center',gap:10,marginBottom:16 }}>
+            {[0,1,2,3,4].map(i => (
+              <div key={i} style={{ width:10,height:10,borderRadius:'50%',background:'#818cf8',animation:`pulse 1.4s ${i*0.15}s infinite` }} />
+            ))}
+          </div>
+          <p style={{ fontSize:14,fontWeight:600,color:'var(--text-primary)',marginBottom:6 }}>Evaluating this job against your profile...</p>
+          <p style={{ fontSize:12,color:'var(--text-muted)' }}>Scoring 10 dimensions — skills, culture, salary, ATS, and more</p>
+          <style>{`@keyframes pulse{0%,80%,100%{transform:scale(0.6);opacity:0.5}40%{transform:scale(1);opacity:1}}`}</style>
+        </div>
+      )}
 
       {/* Result */}
       {result && (

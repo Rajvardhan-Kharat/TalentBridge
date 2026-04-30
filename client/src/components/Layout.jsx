@@ -4,19 +4,20 @@ import { useState, useEffect } from 'react';
 import {
   LayoutDashboard, Search, Brain, FileText, Wand2,
   Globe, Kanban, BookOpen, LogOut, Sparkles, ChevronRight,
-  User, Crown, Star, FileDown, Moon, Sun
+  User, Crown, Star, FileDown, Moon, Sun, Map
 } from 'lucide-react';
 
 const navItems = [
-  { to: '/',               icon: LayoutDashboard, label: 'Dashboard',      sub: 'Overview & Insights' },
-  { to: '/jobs',           icon: Search,          label: 'Job Discovery',  sub: 'Find & Match Jobs' },
+  { to: '/',               icon: LayoutDashboard, label: 'Dashboard',       sub: 'Overview & Insights' },
+  { to: '/jobs',           icon: Search,          label: 'Job Discovery',   sub: 'Find & Match Jobs' },
   { to: '/evaluator',      icon: Brain,           label: 'Smart Evaluator', sub: 'Score Any Job' },
-  { to: '/cv-tailor',      icon: FileText,        label: 'CV Tailor',      sub: 'ATS-Optimized CVs' },
-  { to: '/resume',         icon: FileDown,        label: 'Resume Builder', sub: 'Professional PDF' },
-  { to: '/toolkit',        icon: Wand2,           label: 'Career Toolkit', sub: '20 Smart Tools' },
-  { to: '/portal-scanner', icon: Globe,           label: 'Portal Scanner', sub: 'Company Job Boards' },
-  { to: '/tracker',        icon: Kanban,          label: 'App Tracker',    sub: 'Kanban Pipeline' },
-  { to: '/story-bank',     icon: BookOpen,        label: 'Story Bank',     sub: 'STAR Stories' },
+  { to: '/cv-tailor',      icon: FileText,        label: 'CV Tailor',       sub: 'ATS-Optimized CVs' },
+  { to: '/resume',         icon: FileDown,        label: 'Resume Builder',  sub: 'Professional PDF' },
+  { to: '/toolkit',        icon: Wand2,           label: 'Career Toolkit',  sub: '20 Smart Tools' },
+  { to: '/learning-roadmap', icon: Map,           label: 'Learning Roadmap',sub: 'Free Study Plan' },
+  { to: '/portal-scanner', icon: Globe,           label: 'Portal Scanner',  sub: 'Company Job Boards' },
+  { to: '/tracker',        icon: Kanban,          label: 'App Tracker',     sub: 'Kanban Pipeline' },
+  { to: '/story-bank',     icon: BookOpen,        label: 'Story Bank',      sub: 'STAR Stories' },
 ];
 
 const PLAN_META = {
@@ -140,6 +141,40 @@ export default function Layout() {
             </NavLink>
           ))}
         </nav>
+
+        {/* Profile Strength Meter */}
+        {(() => {
+          const p = user?.profile || {};
+          const checks = [
+            { label: 'Photo', done: !!user?.avatar },
+            { label: 'Skills', done: (p.skills?.length || 0) >= 3 },
+            { label: 'Target Role', done: (p.targetRoles?.length || 0) > 0 },
+            { label: 'Experience', done: !!p.experience },
+            { label: 'Education', done: !!p.education },
+            { label: 'Summary', done: !!p.bio },
+          ];
+          const score = Math.round((checks.filter(c => c.done).length / checks.length) * 100);
+          const color = score >= 80 ? '#10b981' : score >= 50 ? '#f59e0b' : '#6366f1';
+          if (score === 100) return null;
+          return (
+            <div style={{ padding: '10px', borderTop: '1px solid var(--border)' }}>
+              <NavLink to="/profile" style={{ textDecoration: 'none', display: 'block', padding: '10px', background: 'var(--bg-elevated)', borderRadius: 10, border: `1px solid ${color}33`, cursor: 'pointer' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color }}>Profile Strength</span>
+                  <span style={{ fontSize: 11, fontWeight: 800, color }}>{score}%</span>
+                </div>
+                <div style={{ height: 5, background: 'var(--bg-surface)', borderRadius: 3, overflow: 'hidden', marginBottom: 8 }}>
+                  <div style={{ height: '100%', width: `${score}%`, background: `linear-gradient(90deg, ${color}, ${color}cc)`, borderRadius: 3, transition: 'width 0.6s ease' }} />
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                  {checks.filter(c => !c.done).slice(0, 3).map(c => (
+                    <span key={c.label} style={{ fontSize: 9, padding: '2px 6px', borderRadius: 20, background: `${color}18`, color, fontWeight: 600 }}>+ {c.label}</span>
+                  ))}
+                </div>
+              </NavLink>
+            </div>
+          );
+        })()}
 
         {/* User Footer */}
         <div style={{ borderTop: '1px solid var(--border)', padding: '10px' }}>

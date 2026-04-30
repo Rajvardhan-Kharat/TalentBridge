@@ -15,6 +15,7 @@ import StoryBankPage from './pages/StoryBankPage';
 import ProfilePage from './pages/ProfilePage';
 import PricingPage from './pages/PricingPage';
 import ResumeBuilderPage from './pages/ResumeBuilderPage';
+import LearningRoadmapPage from './pages/LearningRoadmapPage';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -52,6 +53,7 @@ export default function App() {
         <Route path="profile"           element={<ProfilePage />} />
         <Route path="pricing"           element={<PricingPage />} />
         <Route path="resume"            element={<ResumeBuilderPage />} />
+        <Route path="learning-roadmap"   element={<LearningRoadmapPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" />} />

@@ -42,11 +42,21 @@ const mapAdzunaJob = (job) => {
   const salaryMin = job.salary_min || Math.floor(Math.random() * 8 + 4) * 100000;
   const salaryMax = job.salary_max || salaryMin + Math.floor(Math.random() * 10 + 5) * 100000;
 
+  const title = job.title || 'Unknown Role';
+  const company = job.company?.display_name || 'Unknown Company';
+
+  // Use redirect_url as the apply link — fallback to a Google Jobs search so users always have somewhere to go
+  const applyUrl = job.redirect_url
+    || `https://www.google.com/search?q=${encodeURIComponent(`${title} ${company} job apply India`)}`;
+
+  // Detect remote from title or description
+  const isRemote = title.toLowerCase().includes('remote') || (job.description || '').toLowerCase().includes('remote');
+
   return {
-    title: job.title || 'Unknown Role',
-    company: job.company?.display_name || 'Unknown Company',
+    title,
+    company,
     location: job.location?.display_name || 'India',
-    locationType: job.title?.toLowerCase().includes('remote') ? 'remote' : 'onsite',
+    locationType: isRemote ? 'remote' : 'onsite',
     salaryMin,
     salaryMax,
     currency: 'INR',
@@ -54,14 +64,15 @@ const mapAdzunaJob = (job) => {
     requirements: [],
     skills: job.category?.tag ? [job.category.tag] : ['Software'],
     experience: '1-3 years',
-    jobType: 'full-time',
+    jobType: job.contract_time === 'part_time' ? 'part-time' : (job.contract_type === 'contract' ? 'contract' : 'full-time'),
     industry: job.category?.label || 'Technology',
-    applyUrl: job.redirect_url || job.redirect_url,
+    applyUrl,
     sourcePortal: 'Adzuna',
     isActive: true,
     postedAt: job.created ? new Date(job.created) : new Date(),
   };
 };
+
 
 const fetchAndStoreJobs = async () => {
   if (!ADZUNA_APP_ID || !ADZUNA_APP_KEY) {

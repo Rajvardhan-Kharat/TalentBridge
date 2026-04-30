@@ -170,6 +170,81 @@ Output the complete tailored resume text now:`;
 };
 
 // ════════════════════════════════════════════════════════════════════════
+// MODULE 3b: "Am I Ready?" Pre-Apply Checker
+// ════════════════════════════════════════════════════════════════════════
+const readyCheck = async (jobDescription, userProfile) => {
+  const system = `You are a brutally honest career advisor. Assess if a candidate is ready to apply for a job.
+Return ONLY valid JSON, no markdown, no extra text.`;
+
+  const userMsg = `
+JOB DESCRIPTION:
+${jobDescription.slice(0, 2000)}
+
+CANDIDATE PROFILE:
+Skills: ${(userProfile.skills || []).map(s => s.name || s).join(', ') || 'Not specified'}
+Target Roles: ${(userProfile.targetRoles || []).join(', ') || 'Not specified'}
+Experience: ${userProfile.experience || 'Not specified'}
+Education: ${userProfile.education || 'Not specified'}
+Current Title: ${userProfile.currentTitle || 'Not specified'}
+
+Return this exact JSON:
+{
+  "readinessScore": 72,
+  "verdict": "Strong Candidate",
+  "verdictColor": "green",
+  "matchedRequirements": ["requirement 1", "requirement 2"],
+  "missingRequirements": ["missing skill 1", "missing skill 2"],
+  "quickWins": ["Do X in 1 week to qualify", "Add Y to your profile"],
+  "applyAdvice": "One sentence honest advice on whether to apply now or after upskilling"
+}
+
+verdictColor must be: "green" (score>=70), "yellow" (score 40-69), "red" (score<40)
+verdict must be: "Strong Candidate", "Apply with Confidence", "Worth a Try", "Needs Preparation", "Skill Gap — Upskill First"`;
+
+  const raw = await callAI(system, userMsg, 1500);
+  return extractJSON(raw);
+};
+
+// ════════════════════════════════════════════════════════════════════════
+// MODULE 3c: Free Learning Roadmap Generator
+// ════════════════════════════════════════════════════════════════════════
+const generateLearningRoadmap = async (targetRole, currentSkills, timelineWeeks = 8) => {
+  const system = `You are an expert career coach and curriculum designer specialising in the Indian job market.
+Create practical, FREE learning roadmaps using only free resources (YouTube, free Coursera audits, official docs, freeCodeCamp, Khan Academy, etc).
+Return ONLY valid JSON.`;
+
+  const userMsg = `
+Target Role: ${targetRole}
+Current Skills: ${currentSkills.join(', ') || 'Beginner'}
+Available Weeks: ${timelineWeeks}
+
+Return this exact JSON:
+{
+  "targetRole": "${targetRole}",
+  "totalWeeks": ${timelineWeeks},
+  "overview": "2-3 sentence summary of the learning path",
+  "phases": [
+    {
+      "phase": 1,
+      "title": "Phase title",
+      "weeks": "Week 1-2",
+      "focus": "What to focus on",
+      "skills": ["skill1", "skill2"],
+      "resources": [
+        { "title": "Resource name", "url": "https://actual-free-url.com", "type": "YouTube/Docs/Course", "duration": "2 hours" }
+      ],
+      "milestone": "What you can do after this phase"
+    }
+  ],
+  "finalOutcome": "What job/role you will qualify for after completing this roadmap",
+  "proTips": ["Practical tip 1", "Practical tip 2", "Practical tip 3"]
+}`;
+
+  const raw = await callAI(system, userMsg, 3000);
+  return extractJSON(raw);
+};
+
+// ════════════════════════════════════════════════════════════════════════
 // MODULE 4: AI Prompt Toolkit — 20 tools
 // ════════════════════════════════════════════════════════════════════════
 const runPromptTool = async (toolId, inputs) => {
@@ -585,5 +660,7 @@ module.exports = {
   tailorCv,
   enhanceProfile,
   runPromptTool,
-  computeMatchScore
+  computeMatchScore,
+  readyCheck,
+  generateLearningRoadmap,
 };
