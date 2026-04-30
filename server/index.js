@@ -37,6 +37,18 @@ app.use(errorHandler);
 
 // ── Start ───────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
+const cron = require('node-cron');
+const { fetchAndStoreJobs } = require('./src/services/jobFetcher');
+
 connectDB().then(() => {
   app.listen(PORT, () => console.log(`🚀 HireIndia API running on http://localhost:${PORT}`));
+
+  // Run job sync immediately on first start
+  fetchAndStoreJobs();
+
+  // Schedule daily sync at 2:00 AM
+  cron.schedule('0 2 * * *', () => {
+    console.log('⏰ Running scheduled Adzuna job sync...');
+    fetchAndStoreJobs();
+  });
 });
