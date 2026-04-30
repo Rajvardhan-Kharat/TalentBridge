@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Sparkles, Eye, EyeOff, ArrowRight, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-const perks = ['AI-powered job matching', 'CV tailoring in seconds', '20 AI career tools', 'Application tracker'];
+const perks = ['Smart job matching', 'CV tailoring in seconds', '20 career tools', 'Application tracker'];
 
 export default function RegisterPage() {
   const { register } = useAuth();
@@ -40,9 +40,9 @@ export default function RegisterPage() {
               <Sparkles size={22} color="white" />
             </div>
             <h2 style={{ fontSize: 32, fontWeight: 800, fontFamily: 'Plus Jakarta Sans', lineHeight: 1.2, marginBottom: 12 }}>
-              Your AI-powered<br /><span style={{ background: 'linear-gradient(135deg,#818cf8,#06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>career co-pilot</span>
+              Your smart<br /><span style={{ background: 'linear-gradient(135deg,#818cf8,#06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>career co-pilot</span>
             </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: 15, lineHeight: 1.6 }}>Join thousands of candidates using AI to land their dream job faster.</p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 15, lineHeight: 1.6 }}>Join thousands of candidates using smart tools to land their dream job faster.</p>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 28 }}>
             {perks.map(p => (

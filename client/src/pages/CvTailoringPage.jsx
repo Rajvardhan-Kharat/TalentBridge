@@ -59,14 +59,14 @@ export default function CvTailoringPage() {
           <span style={{ fontSize:12,color:'#818cf8',fontWeight:600,letterSpacing:1 }}>MODULE 3 — CV TAILORING ENGINE</span>
         </div>
         <h1 style={{ fontFamily:'Plus Jakarta Sans',fontSize:26,fontWeight:800,marginBottom:4 }}>CV Tailoring Engine</h1>
-        <p style={{ color:'var(--text-secondary)',fontSize:14 }}>AI generates ATS-optimized resumes tailored per job</p>
+        <p style={{ color:'var(--text-secondary)',fontSize:14 }}>System generates ATS-optimized resumes tailored per job</p>
       </div>
 
       <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:20,marginBottom:24 }}>
         {/* Upload Base CV */}
         <div className="glass animate-fade-in" style={{ padding:'24px' }}>
           <h3 style={{ fontSize:15,fontWeight:700,marginBottom:4 }}>Upload Base CV</h3>
-          <p style={{ color:'var(--text-muted)',fontSize:12,marginBottom:16 }}>PDF or TXT — AI will parse and use this as the source</p>
+          <p style={{ color:'var(--text-muted)',fontSize:12,marginBottom:16 }}>PDF or TXT — System will parse and use this as the source</p>
           <div {...getRootProps()} style={{
             border:`2px dashed ${isDragActive?'#6366f1':'var(--border)'}`,
             borderRadius:12, padding:'28px', textAlign:'center', cursor:'pointer',
@@ -89,7 +89,7 @@ export default function CvTailoringPage() {
         {/* Tailor for Job */}
         <div className="glass animate-fade-in" style={{ padding:'24px' }}>
           <h3 style={{ fontSize:15,fontWeight:700,marginBottom:4 }}>Tailor for a Job</h3>
-          <p style={{ color:'var(--text-muted)',fontSize:12,marginBottom:12 }}>AI rewrites your CV to match this specific JD</p>
+          <p style={{ color:'var(--text-muted)',fontSize:12,marginBottom:12 }}>System rewrites your CV to match this specific JD</p>
           <div style={{ display:'flex',gap:10,marginBottom:10 }}>
             <input className="input" placeholder="Job Title" value={form.jobTitle}
               onChange={e => setForm(f => ({...f,jobTitle:e.target.value}))} style={{ flex:1 }} />

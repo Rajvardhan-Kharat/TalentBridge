@@ -10,10 +10,10 @@ import {
 const navItems = [
   { to: '/',               icon: LayoutDashboard, label: 'Dashboard',      sub: 'Overview & Insights' },
   { to: '/jobs',           icon: Search,          label: 'Job Discovery',  sub: 'Find & Match Jobs' },
-  { to: '/evaluator',      icon: Brain,           label: 'AI Evaluator',   sub: 'Score Any Job' },
+  { to: '/evaluator',      icon: Brain,           label: 'Smart Evaluator', sub: 'Score Any Job' },
   { to: '/cv-tailor',      icon: FileText,        label: 'CV Tailor',      sub: 'ATS-Optimized CVs' },
   { to: '/resume',         icon: FileDown,        label: 'Resume Builder', sub: 'Professional PDF' },
-  { to: '/toolkit',        icon: Wand2,           label: 'AI Toolkit',     sub: '20 AI Career Tools' },
+  { to: '/toolkit',        icon: Wand2,           label: 'Career Toolkit', sub: '20 Smart Tools' },
   { to: '/portal-scanner', icon: Globe,           label: 'Portal Scanner', sub: 'Company Job Boards' },
   { to: '/tracker',        icon: Kanban,          label: 'App Tracker',    sub: 'Kanban Pipeline' },
   { to: '/story-bank',     icon: BookOpen,        label: 'Story Bank',     sub: 'STAR Stories' },
@@ -76,7 +76,7 @@ export default function Layout() {
             </div>
             <div>
               <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontWeight: 800, fontSize: 15, color: '#f1f5f9' }}>TalentBridge</div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>AI Talent Platform · All Sectors</div>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>Smart Talent Platform · All Sectors</div>
             </div>
           </div>
           {/* Upgrade banner for free users */}

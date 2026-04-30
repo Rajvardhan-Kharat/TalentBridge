@@ -121,7 +121,7 @@ export default function JobDiscoveryPage() {
           <span style={{ fontSize:12,color:'#818cf8',fontWeight:600,letterSpacing:1 }}>MODULE 1 — JOB DISCOVERY</span>
         </div>
         <h1 style={{ fontFamily:'Plus Jakarta Sans',fontSize:26,fontWeight:800,marginBottom:4 }}>Find Your Perfect Job</h1>
-        <p style={{ color:'var(--text-secondary)',fontSize:14 }}>AI-powered skills-based matching — not just keywords</p>
+        <p style={{ color:'var(--text-secondary)',fontSize:14 }}>Smart skills-based matching — not just keywords</p>
       </div>
 
       {/* Search Bar */}

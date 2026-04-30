@@ -294,7 +294,7 @@ export default function StoryBankPage() {
         <div style={{ display: 'flex', gap: 16, marginBottom: 20, flexWrap: 'wrap' }}>
           {[
             { label: 'Total Stories',   value: stories.length,             color: '#6366f1' },
-            { label: 'AI Generated',    value: stories.filter(s => s.tool).length, color: '#8b5cf6' },
+            { label: 'Auto Generated',    value: stories.filter(s => s.tool).length, color: '#8b5cf6' },
             { label: 'Showing',         value: filtered.length,            color: '#10b981' },
           ].map(({ label, value, color }) => (
             <div key={label} style={{ padding: '10px 18px', borderRadius: 10, background: 'var(--bg-surface)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -317,7 +317,7 @@ export default function StoryBankPage() {
           <BookOpen size={52} style={{ opacity: 0.2, marginBottom: 14 }} />
           <h3 style={{ fontSize: 17, fontWeight: 700, marginBottom: 6, color: 'var(--text-secondary)' }}>No stories yet</h3>
           <p style={{ fontSize: 13, lineHeight: 1.6, maxWidth: 380, margin: '0 auto 20px' }}>
-            Stories are automatically saved when you use the <strong style={{ color: '#818cf8' }}>Behavioral Story Builder</strong> in the AI Toolkit, or add them manually here.
+            Stories are automatically saved when you use the <strong style={{ color: '#818cf8' }}>Behavioral Story Builder</strong> in the Career Toolkit, or add them manually here.
           </p>
           <button className="btn-primary" onClick={() => setShowAdd(true)}>
             <Plus size={15} /> Add Your First Story
@@ -346,7 +346,7 @@ export default function StoryBankPage() {
       {stories.length > 0 && (
         <div style={{ marginTop: 24, padding: '16px 20px', background: 'rgba(99,102,241,0.06)', borderRadius: 12, border: '1px solid rgba(99,102,241,0.15)' }}>
           <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.7 }}>
-            💡 <strong>Pro tip:</strong> Go to <strong style={{ color: '#818cf8' }}>AI Toolkit → Behavioral Story Builder</strong> to auto-generate 3 STAR stories tailored to your target role — they'll appear here automatically. Export all stories as a PDF prep sheet before your next interview.
+            💡 <strong>Pro tip:</strong> Go to <strong style={{ color: '#818cf8' }}>Career Toolkit → Behavioral Story Builder</strong> to auto-generate 3 STAR stories tailored to your target role — they'll appear here automatically. Export all stories as a PDF prep sheet before your next interview.
           </p>
         </div>
       )}

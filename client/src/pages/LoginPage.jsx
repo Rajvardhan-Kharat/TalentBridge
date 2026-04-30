@@ -42,7 +42,7 @@ export default function LoginPage() {
           <h1 style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: 28, fontWeight: 800, color: '#f1f5f9', marginBottom: 8 }}>
             HireIndia
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>AI-powered job search for India's best talent</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Smart job search for India's best talent</p>
         </div>
 
         {/* Card */}
@@ -75,10 +75,6 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Demo hint */}
-          <div style={{ marginTop: 16, padding: '10px 14px', background: 'rgba(99,102,241,0.08)', borderRadius: 8, border: '1px solid rgba(99,102,241,0.15)' }}>
-            <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>💡 <strong style={{ color: 'var(--text-secondary)' }}>Demo:</strong> Register a new account to get started instantly.</p>
-          </div>
         </div>
       </div>
     </div>

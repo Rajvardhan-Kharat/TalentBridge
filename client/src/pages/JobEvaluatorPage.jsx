@@ -67,9 +67,9 @@ export default function JobEvaluatorPage() {
       <div style={{ marginBottom:24 }} className="animate-fade-in">
         <div style={{ display:'flex',alignItems:'center',gap:8,marginBottom:6 }}>
           <Brain size={18} color="#818cf8" />
-          <span style={{ fontSize:12,color:'#818cf8',fontWeight:600,letterSpacing:1 }}>MODULE 2 — AI JOB EVALUATOR</span>
+          <span style={{ fontSize:12,color:'#818cf8',fontWeight:600,letterSpacing:1 }}>MODULE 2 — SMART JOB EVALUATOR</span>
         </div>
-        <h1 style={{ fontFamily:'Plus Jakarta Sans',fontSize:26,fontWeight:800,marginBottom:4 }}>AI Job Evaluator</h1>
+        <h1 style={{ fontFamily:'Plus Jakarta Sans',fontSize:26,fontWeight:800,marginBottom:4 }}>Job Evaluator</h1>
         <p style={{ color:'var(--text-secondary)',fontSize:14 }}>Score any job across 10 dimensions against your profile</p>
       </div>
 

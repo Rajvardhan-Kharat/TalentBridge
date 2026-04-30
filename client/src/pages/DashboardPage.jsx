@@ -57,7 +57,7 @@ export default function DashboardPage() {
             Good morning, {firstName}! 👋
           </h1>
           <p style={{ color:'var(--text-secondary)',fontSize:14 }}>
-            {user?.profile?.sector ? `${user.profile.sector} Professional · ` : ''}{user?.profile?.currentTitle || 'Your AI-powered career intelligence'}
+            {user?.profile?.sector ? `${user.profile.sector} Professional · ` : ''}{user?.profile?.currentTitle || 'Your smart career intelligence'}
           </p>
         </div>
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
@@ -103,7 +103,7 @@ export default function DashboardPage() {
           <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16 }}>
             <div>
               <h3 style={{ fontSize:16,fontWeight:700 }}>Skills Gap Analysis</h3>
-              <p style={{ color:'var(--text-muted)',fontSize:12,marginTop:2 }}>AI-powered market intelligence</p>
+              <p style={{ color:'var(--text-muted)',fontSize:12,marginTop:2 }}>Smart market intelligence</p>
             </div>
             <button className="btn-primary" onClick={handleSkillsGap} disabled={analyzing} style={{ padding:'8px 14px',fontSize:13 }}>
               {analyzing ? <div className="loader" style={{width:16,height:16}} /> : <><Brain size={14} /> Analyze</>}
@@ -113,7 +113,7 @@ export default function DashboardPage() {
           {!analysis && !analyzing && (
             <div style={{ textAlign:'center',padding:'28px 0',color:'var(--text-muted)' }}>
               <Brain size={40} style={{ marginBottom:10,opacity:0.3 }} />
-              <p style={{ fontSize:13 }}>Click Analyze to get your AI skills gap report</p>
+              <p style={{ fontSize:13 }}>Click Analyze to get your smart skills gap report</p>
             </div>
           )}
 
@@ -129,7 +129,7 @@ export default function DashboardPage() {
               <div style={{ display:'flex',gap:12,marginBottom:16 }}>
                 <div style={{ flex:1,padding:'12px',background:'rgba(16,185,129,0.08)',borderRadius:10,border:'1px solid rgba(16,185,129,0.15)',textAlign:'center' }}>
                   <div style={{ fontSize:24,fontWeight:800,color:'#10b981' }}>{analysis.matchRateWithSkills}%</div>
-                  <div style={{ fontSize:11,color:'var(--text-muted)' }}>With AI skills match</div>
+                  <div style={{ fontSize:11,color:'var(--text-muted)' }}>With smart skills match</div>
                 </div>
                 <div style={{ flex:1,padding:'12px',background:'rgba(100,116,139,0.08)',borderRadius:10,border:'1px solid rgba(100,116,139,0.15)',textAlign:'center' }}>
                   <div style={{ fontSize:24,fontWeight:800,color:'var(--text-secondary)' }}>{analysis.matchRateWithoutSkills}%</div>
@@ -188,9 +188,9 @@ export default function DashboardPage() {
         <div style={{ display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12 }}>
           {[
             { label:'Find Jobs', sub:'Browse matches', href:'/jobs', color:'#6366f1' },
-            { label:'Evaluate Job', sub:'Paste JD for AI score', href:'/evaluator', color:'#8b5cf6' },
+            { label:'Evaluate Job', sub:'Paste JD for smart score', href:'/evaluator', color:'#8b5cf6' },
             { label:'Tailor CV', sub:'ATS-optimize resume', href:'/cv-tailor', color:'#06b6d4' },
-            { label:'AI Toolkit', sub:'20 career tools', href:'/toolkit', color:'#10b981' },
+            { label:'Career Toolkit', sub:'20 career tools', href:'/toolkit', color:'#10b981' },
           ].map(({ label, sub, href, color }) => (
             <a key={label} href={href} style={{ textDecoration:'none' }}>
               <div style={{ padding:'14px',borderRadius:12,border:'1px solid var(--border)',background:'var(--bg-elevated)',

@@ -67,10 +67,10 @@ export default function PromptToolkitPage() {
       <div style={{ marginBottom:24 }} className="animate-fade-in">
         <div style={{ display:'flex',alignItems:'center',gap:8,marginBottom:6 }}>
           <Wand2 size={18} color="#818cf8" />
-          <span style={{ fontSize:12,color:'#818cf8',fontWeight:600,letterSpacing:1 }}>MODULE 4 — AI PROMPT TOOLKIT</span>
+          <span style={{ fontSize:12,color:'#818cf8',fontWeight:600,letterSpacing:1 }}>MODULE 4 — CAREER TOOLKIT</span>
         </div>
-        <h1 style={{ fontFamily:'Plus Jakarta Sans',fontSize:26,fontWeight:800,marginBottom:4 }}>AI Career Toolkit</h1>
-        <p style={{ color:'var(--text-secondary)',fontSize:14 }}>20 powerful AI tools to supercharge every stage of your job search</p>
+        <h1 style={{ fontFamily:'Plus Jakarta Sans',fontSize:26,fontWeight:800,marginBottom:4 }}>Career Toolkit</h1>
+        <p style={{ color:'var(--text-secondary)',fontSize:14 }}>20 powerful smart tools to supercharge every stage of your job search</p>
       </div>
 
       {/* Category filter */}
@@ -138,13 +138,13 @@ export default function PromptToolkitPage() {
             </div>
 
             <button className="btn-primary" onClick={runTool} disabled={loading} style={{ width:'100%',justifyContent:'center',padding:'10px' }}>
-              {loading ? <><div className="loader" style={{width:16,height:16}} /> Generating...</> : <><Sparkles size={15} /> Generate with AI</>}
+              {loading ? <><div className="loader" style={{width:16,height:16}} /> Generating...</> : <><Sparkles size={15} /> Generate Output</>}
             </button>
 
             {output && (
               <div style={{ marginTop:16 }}>
                 <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8 }}>
-                  <span style={{ fontSize:12,fontWeight:600,color:'var(--text-muted)' }}>AI OUTPUT</span>
+                  <span style={{ fontSize:12,fontWeight:600,color:'var(--text-muted)' }}>OUTPUT</span>
                   <button className="btn-ghost" onClick={copy} style={{ padding:'4px 10px',fontSize:12 }}>
                     {copied ? <><Check size={12} /> Copied!</> : <><Copy size={12} /> Copy</>}
                   </button>
