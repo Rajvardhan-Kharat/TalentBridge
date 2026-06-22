@@ -6,8 +6,25 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true, lowercase: true },
   password: { type: String, required: true, minlength: 6 },
   avatar: { type: String, default: '' },
-  role: { type: String, default: 'jobseeker' },
+  role: { type: String, enum: ['jobseeker', 'company', 'admin'], default: 'jobseeker' },
   onboardingComplete: { type: Boolean, default: false },
+
+  // ── Company Profile (populated when role === 'company') ──────────────────
+  companyProfile: {
+    companyName: String,
+    website: String,
+    industry: String,
+    size: String,           // '1-10', '11-50', '51-200', '201-500', '500+'
+    founded: String,
+    headquarters: String,
+    description: String,
+    logo: String,
+    logoPublicId: String,
+    linkedin: String,
+    twitter: String,
+    verified: { type: Boolean, default: false },
+    totalJobsPosted: { type: Number, default: 0 },
+  },
 
   // ── Subscription / Revenue Model ────────────────────────────────────────
   subscription: {

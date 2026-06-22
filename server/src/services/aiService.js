@@ -172,37 +172,83 @@ Output the complete tailored resume text now:`;
 // ════════════════════════════════════════════════════════════════════════
 // MODULE 3b: "Am I Ready?" Pre-Apply Checker
 // ════════════════════════════════════════════════════════════════════════
+
+// Trusted free learning platforms — URLs from these domains are safe to show
+const TRUSTED_COURSE_DOMAINS = [
+  'freecodecamp.org', 'youtube.com', 'youtu.be', 'coursera.org',
+  'developer.mozilla.org', 'docs.python.org', 'docs.oracle.com',
+  'learn.microsoft.com', 'web.dev', 'w3schools.com', 'geeksforgeeks.org',
+  'kaggle.com', 'fast.ai', 'khanacademy.org', 'edx.org',
+  'udemy.com', 'nptel.ac.in', 'scaler.com', 'roadmap.sh',
+  'docs.docker.com', 'docs.aws.amazon.com', 'cloud.google.com',
+  'reactjs.org', 'react.dev', 'nodejs.org', 'mongodb.com/docs',
+  'spring.io', 'kotlinlang.org', 'dart.dev', 'flutter.dev',
+  'tensorflow.org', 'pytorch.org', 'scikit-learn.org', 'pandas.pydata.org',
+];
+
+const isTrustedUrl = (url) => {
+  try {
+    const { hostname } = new URL(url);
+    return TRUSTED_COURSE_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d));
+  } catch { return false; }
+};
+
 const readyCheck = async (jobDescription, userProfile) => {
+  const candidateSkills = (userProfile.skills || []).map(s => s.name || s);
   const system = `You are a brutally honest career advisor. Assess if a candidate is ready to apply for a job.
-Return ONLY valid JSON, no markdown, no extra text.`;
+CRITICAL RULES:
+1. Compute readinessScore DYNAMICALLY based on: how many job requirements the candidate actually meets vs total requirements. Do NOT use a fixed or example number.
+2. For each missing skill, recommend exactly ONE genuinely free learning resource with a REAL, working URL.
+3. Only use URLs from these exact trusted domains: freecodecamp.org, youtube.com, coursera.org, developer.mozilla.org, docs.python.org, learn.microsoft.com, web.dev, khanacademy.org, roadmap.sh, nptel.ac.in, geeksforgeeks.org.
+4. Return ONLY valid JSON, no markdown, no extra text outside the JSON.`;
 
   const userMsg = `
 JOB DESCRIPTION:
 ${jobDescription.slice(0, 2000)}
 
 CANDIDATE PROFILE:
-Skills: ${(userProfile.skills || []).map(s => s.name || s).join(', ') || 'Not specified'}
+Skills: ${candidateSkills.join(', ') || 'None listed'}
 Target Roles: ${(userProfile.targetRoles || []).join(', ') || 'Not specified'}
 Experience: ${userProfile.experience || 'Not specified'}
 Education: ${userProfile.education || 'Not specified'}
 Current Title: ${userProfile.currentTitle || 'Not specified'}
 
-Return this exact JSON:
+STEP 1: Extract all concrete requirements from the job description (skills, tools, experience level, qualifications).
+STEP 2: For each requirement, check if the candidate's profile satisfies it.
+STEP 3: Compute readinessScore = (matched requirements / total requirements) * 100, rounded to nearest integer.
+STEP 4: For each missing skill, find a real free course URL from the trusted domains listed above.
+
+Return this EXACT JSON structure:
 {
-  "readinessScore": 72,
-  "verdict": "Strong Candidate",
-  "verdictColor": "green",
-  "matchedRequirements": ["requirement 1", "requirement 2"],
-  "missingRequirements": ["missing skill 1", "missing skill 2"],
-  "quickWins": ["Do X in 1 week to qualify", "Add Y to your profile"],
-  "applyAdvice": "One sentence honest advice on whether to apply now or after upskilling"
-}
+  "readinessScore": <integer 0-100 computed in step 3>,
+  "totalRequirementsFound": <integer>,
+  "matchedCount": <integer>,
+  "verdict": "<one of: Strong Candidate | Apply with Confidence | Worth a Try | Needs Preparation | Skill Gap — Upskill First>",
+  "verdictColor": "<green if score>=70, yellow if 40-69, red if <40>",
+  "matchedRequirements": ["exact requirement from JD that candidate meets"],
+  "missingRequirements": ["exact requirement from JD that candidate lacks"],
+  "quickWins": ["Specific 1-week action to partially close gap"],
+  "applyAdvice": "One honest sentence: should they apply now or upskill first?",
+  "recommendedCourses": [
+    {
+      "skill": "name of missing skill",
+      "courseName": "exact course/resource title",
+      "url": "https://real-url-from-trusted-domain.com/specific-path",
+      "platform": "Platform name (e.g. freeCodeCamp, YouTube, Coursera)",
+      "duration": "estimated time e.g. 4 hours or 3 weeks",
+      "isFree": true
+    }
+  ]
+}`;
 
-verdictColor must be: "green" (score>=70), "yellow" (score 40-69), "red" (score<40)
-verdict must be: "Strong Candidate", "Apply with Confidence", "Worth a Try", "Needs Preparation", "Skill Gap — Upskill First"`;
+  const raw = await callAI(system, userMsg, 2000);
+  const result = extractJSON(raw);
 
-  const raw = await callAI(system, userMsg, 1500);
-  return extractJSON(raw);
+  // Sanitize: filter out any course URLs that aren't from trusted domains
+  if (result.recommendedCourses) {
+    result.recommendedCourses = result.recommendedCourses.filter(c => isTrustedUrl(c.url));
+  }
+  return result;
 };
 
 // ════════════════════════════════════════════════════════════════════════
@@ -396,7 +442,20 @@ All should feel human, not templated.`
     },
 
     'skill-gap': {
-      system: 'You are a career skills strategist with deep knowledge of job market requirements.',
+      system: `You are a career skills strategist with deep knowledge of job market requirements.
+CRITICAL: When listing learning resources, you MUST use ONLY real, working URLs from these trusted free platforms:
+- freecodecamp.org (e.g. https://www.freecodecamp.org/learn)
+- youtube.com (e.g. https://www.youtube.com/results?search_query=learn+javascript)
+- coursera.org (e.g. https://www.coursera.org/learn/machine-learning)
+- developer.mozilla.org (e.g. https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+- docs.python.org (e.g. https://docs.python.org/3/tutorial/)
+- learn.microsoft.com (e.g. https://learn.microsoft.com/en-us/training/)
+- web.dev (e.g. https://web.dev/learn/)
+- khanacademy.org (e.g. https://www.khanacademy.org/computing)
+- roadmap.sh (e.g. https://roadmap.sh/frontend)
+- nptel.ac.in (e.g. https://nptel.ac.in/courses/)
+- geeksforgeeks.org (e.g. https://www.geeksforgeeks.org/)
+DO NOT invent URLs. Only use URLs you are certain exist on these domains.`,
       user: `Analyze the skills gap and create a learning plan.
 
 Target Role: ${inputs.targetRole || 'Not specified'}
@@ -408,7 +467,7 @@ Provide:
 🔴 Critical missing skills (must-have for this role)
 🟡 Nice-to-have skills to develop
 📚 90-day learning plan (week by week)
-🔗 Top 3 resources for each critical skill (courses, projects, certifications)`
+🔗 Top 3 FREE resources for each critical skill — include the real URL from trusted platforms listed in system prompt`
     },
 
     'portfolio-enhancer': {
@@ -652,9 +711,53 @@ Include 8-10 in-demand skills. Be specific to the Indian job market.`;
   return extractJSON(raw);
 };
 
+// ════════════════════════════════════════════════════════════════════════
+// MODULE 9: Skill Evaluator — MCQ Quiz Generator
+// ════════════════════════════════════════════════════════════════════════
+const generateSkillQuiz = async (skill, difficulty = 'intermediate', count = 10) => {
+  const system = `You are an expert technical interviewer and educator. Generate challenging, varied MCQ questions.
+CRITICAL: Return ONLY valid JSON, absolutely no markdown or text outside the JSON.`;
+
+  const user = `Generate ${count} multiple-choice questions to evaluate a candidate's skill in: "${skill}"
+Difficulty level: ${difficulty} (beginner = basic concepts, intermediate = practical usage, advanced = deep internals/edge cases)
+
+Rules:
+- Each question must have exactly 4 options labeled A, B, C, D
+- Only one option is correct
+- Questions should test practical knowledge, not just definitions
+- Vary question types: concept, code output, debugging, best practices, real-world scenarios
+- Explanations must be educational, 1-2 sentences
+
+Return this EXACT JSON:
+{
+  "skill": "${skill}",
+  "difficulty": "${difficulty}",
+  "totalQuestions": ${count},
+  "questions": [
+    {
+      "id": 1,
+      "question": "Question text here?",
+      "options": {
+        "A": "Option A text",
+        "B": "Option B text",
+        "C": "Option C text",
+        "D": "Option D text"
+      },
+      "correctAnswer": "A",
+      "explanation": "Why A is correct and the others are wrong.",
+      "topic": "Sub-topic within the skill"
+    }
+  ]
+}`;
+
+  const raw = await callAI(system, user, 4000);
+  return extractJSON(raw);
+};
+
 module.exports = {
   callAI,
   extractJSON,
+  isTrustedUrl,
   analyzeSkillsGap,
   evaluateJobScore: computeMatchScore,
   tailorCv,
@@ -663,4 +766,5 @@ module.exports = {
   computeMatchScore,
   readyCheck,
   generateLearningRoadmap,
+  generateSkillQuiz,
 };

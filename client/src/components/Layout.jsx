@@ -4,20 +4,26 @@ import { useState, useEffect } from 'react';
 import {
   LayoutDashboard, Search, Brain, FileText, Wand2,
   Globe, Kanban, BookOpen, LogOut, Sparkles, ChevronRight,
-  User, Crown, Star, FileDown, Moon, Sun, Map
+  User, Crown, Star, FileDown, Moon, Sun, Map, Building, Zap
 } from 'lucide-react';
 
 const navItems = [
-  { to: '/',               icon: LayoutDashboard, label: 'Dashboard',       sub: 'Overview & Insights' },
-  { to: '/jobs',           icon: Search,          label: 'Job Discovery',   sub: 'Find & Match Jobs' },
-  { to: '/evaluator',      icon: Brain,           label: 'Smart Evaluator', sub: 'Score Any Job' },
-  { to: '/cv-tailor',      icon: FileText,        label: 'CV Tailor',       sub: 'ATS-Optimized CVs' },
-  { to: '/resume',         icon: FileDown,        label: 'Resume Builder',  sub: 'Professional PDF' },
-  { to: '/toolkit',        icon: Wand2,           label: 'Career Toolkit',  sub: '20 Smart Tools' },
-  { to: '/learning-roadmap', icon: Map,           label: 'Learning Roadmap',sub: 'Free Study Plan' },
-  { to: '/portal-scanner', icon: Globe,           label: 'Portal Scanner',  sub: 'Company Job Boards' },
-  { to: '/tracker',        icon: Kanban,          label: 'App Tracker',     sub: 'Kanban Pipeline' },
-  { to: '/story-bank',     icon: BookOpen,        label: 'Story Bank',      sub: 'STAR Stories' },
+  { to: '/',               icon: LayoutDashboard, label: 'Dashboard',        sub: 'Overview & Insights' },
+  { to: '/jobs',           icon: Search,          label: 'Job Discovery',    sub: 'Find & Match Jobs' },
+  { to: '/evaluator',      icon: Brain,           label: 'Smart Evaluator',  sub: 'Score Any Job' },
+  { to: '/cv-tailor',      icon: FileText,        label: 'CV Tailor',        sub: 'ATS-Optimized CVs' },
+  { to: '/resume',         icon: FileDown,        label: 'Resume Builder',   sub: 'PDF + Share Link' },
+  { to: '/skill-evaluator',icon: Zap,             label: 'Skill Evaluator',  sub: 'MCQ Skill Test' },
+  { to: '/toolkit',        icon: Wand2,           label: 'Career Toolkit',   sub: '20 Smart Tools' },
+  { to: '/learning-roadmap', icon: Map,           label: 'Learning Roadmap', sub: 'Free Study Plan' },
+  { to: '/portal-scanner', icon: Globe,           label: 'Portal Scanner',   sub: 'Company Job Boards' },
+  { to: '/tracker',        icon: Kanban,          label: 'App Tracker',      sub: 'Kanban Pipeline' },
+  { to: '/story-bank',     icon: BookOpen,        label: 'Story Bank',       sub: 'STAR Stories' },
+];
+
+const companyNavItems = [
+  { to: '/company-portal', icon: Building,        label: 'My Job Postings',  sub: 'Manage listings' },
+  { to: '/profile',        icon: User,            label: 'Company Profile',  sub: 'Edit details' },
 ];
 
 const PLAN_META = {
@@ -51,6 +57,8 @@ export default function Layout() {
   const navigate = useNavigate();
   const plan = user?.subscription?.plan || 'free';
   const pm = PLAN_META[plan];
+  const isCompany = user?.role === 'company';
+  const activeNav = isCompany ? companyNavItems : navItems;
   
   const [isDark, setIsDark] = useState(() => {
     const saved = localStorage.getItem('hi_theme');
@@ -101,7 +109,7 @@ export default function Layout() {
 
         {/* Nav */}
         <nav style={{ flex: 1, overflowY: 'auto', padding: '10px' }}>
-          {navItems.map(({ to, icon: Icon, label, sub }) => (
+          {activeNav.map(({ to, icon: Icon, label, sub }) => (
             <NavLink key={to} to={to} end={to === '/'} style={{ textDecoration: 'none' }}>
               {({ isActive }) => (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 10, marginBottom: 2, background: isActive ? 'rgba(99,102,241,0.12)' : 'transparent', border: isActive ? '1px solid rgba(99,102,241,0.2)' : '1px solid transparent', transition: 'all 0.2s', cursor: 'pointer' }}>

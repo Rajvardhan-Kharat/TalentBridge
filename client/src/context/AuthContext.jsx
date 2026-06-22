@@ -27,8 +27,12 @@ export const AuthProvider = ({ children }) => {
     return data.user;
   };
 
-  const register = async (name, email, password) => {
-    const { data } = await api.post('/auth/register', { name, email, password });
+  const register = async (nameOrPayload, email, password) => {
+    // Supports both: register('name','email','pass') and register({ name, email, password, role, ... })
+    const payload = typeof nameOrPayload === 'object'
+      ? nameOrPayload
+      : { name: nameOrPayload, email, password };
+    const { data } = await api.post('/auth/register', payload);
     localStorage.setItem('hi_token', data.token);
     localStorage.setItem('hi_user', JSON.stringify(data.user));
     setUser(data.user);

@@ -166,6 +166,40 @@ const JobCard = ({ job, onTrack }) => {
                   {readiness.quickWins.slice(0,2).map(w => <div key={w} style={{ fontSize:11,color:'var(--text-muted)',padding:'2px 0' }}>→ {w}</div>)}
                 </div>
               )}
+
+              {/* 📚 Free Course Recommendations */}
+              {readiness.recommendedCourses?.length > 0 && (
+                <div style={{ marginTop:12,padding:'10px 12px',background:'rgba(16,185,129,0.05)',borderRadius:10,border:'1px solid rgba(16,185,129,0.15)' }}>
+                  <div style={{ fontSize:11,fontWeight:700,color:'#10b981',marginBottom:8,display:'flex',alignItems:'center',gap:5 }}>
+                    📚 Free Courses to Fill the Gap
+                  </div>
+                  <div style={{ display:'flex',flexDirection:'column',gap:7 }}>
+                    {readiness.recommendedCourses.slice(0,4).map((c,i) => (
+                      <a key={i} href={c.url} target="_blank" rel="noreferrer noopener"
+                        style={{ display:'flex',alignItems:'flex-start',gap:8,padding:'6px 8px',background:'rgba(255,255,255,0.04)',borderRadius:7,border:'1px solid rgba(16,185,129,0.1)',textDecoration:'none',transition:'border-color 0.2s' }}
+                        onMouseEnter={e => e.currentTarget.style.borderColor='rgba(16,185,129,0.4)'}
+                        onMouseLeave={e => e.currentTarget.style.borderColor='rgba(16,185,129,0.1)'}>
+                        <span style={{ fontSize:14,flexShrink:0 }}>
+                          {c.platform?.toLowerCase().includes('youtube') ? '🎥'
+                            : c.platform?.toLowerCase().includes('coursera') ? '🎓'
+                            : c.platform?.toLowerCase().includes('freecodecamp') ? '🔥'
+                            : '📚'}
+                        </span>
+                        <div style={{ flex:1,minWidth:0 }}>
+                          <div style={{ fontSize:11,fontWeight:600,color:'var(--text-primary)',marginBottom:1,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis' }}>{c.courseName}</div>
+                          <div style={{ fontSize:10,color:'var(--text-muted)',display:'flex',gap:8 }}>
+                            <span style={{ color:'#10b981',fontWeight:600 }}>{c.skill}</span>
+                            {c.platform && <span>· {c.platform}</span>}
+                            {c.duration && <span>· {c.duration}</span>}
+                            <span style={{ color:'#10b981' }}>· FREE</span>
+                          </div>
+                        </div>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15,3 21,3 21,9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

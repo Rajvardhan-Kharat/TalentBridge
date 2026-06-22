@@ -70,4 +70,19 @@ router.post('/learning-roadmap', protect, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// @POST /api/ai/skill-quiz — MCQ Quiz Generator
+router.post('/skill-quiz', protect, async (req, res, next) => {
+  try {
+    const { generateSkillQuiz } = require('../services/aiService');
+    const { skill, difficulty, count } = req.body;
+    if (!skill) return res.status(400).json({ success: false, message: 'skill is required' });
+    const quiz = await generateSkillQuiz(
+      skill,
+      difficulty || 'intermediate',
+      Math.min(Number(count) || 10, 15) // cap at 15 questions
+    );
+    res.json({ success: true, quiz });
+  } catch (err) { next(err); }
+});
+
 module.exports = router;

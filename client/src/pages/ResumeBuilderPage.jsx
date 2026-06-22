@@ -1,9 +1,9 @@
 import { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
-import { Download, Eye, EyeOff, FileDown, Camera, Trash2, Wand2 } from 'lucide-react';
+import { Download, Eye, EyeOff, FileDown, Camera, Trash2, Wand2, Share2, Link, Mail, MessageCircle } from 'lucide-react';
 import {
-  Document, Page, Text, View, StyleSheet, Link, PDFDownloadLink, PDFViewer, Image as PDFImage
+  Document, Page, Text, View, StyleSheet, Link as PDFLink, PDFDownloadLink, PDFViewer, Image as PDFImage
 } from '@react-pdf/renderer';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
@@ -88,16 +88,16 @@ function ResumePDF({ user, profile, tpl, withPhoto }) {
               ))}
               {/* Links with plain labels, no arrows */}
               {profile?.linkedinUrl && (
-                <Text style={s.contactTxt}>  |   <Link src={profile.linkedinUrl} style={s.linkTxt}>LinkedIn</Link></Text>
+                <Text style={s.contactTxt}>  |   <PDFLink src={profile.linkedinUrl} style={s.linkTxt}>LinkedIn</PDFLink></Text>
               )}
               {profile?.githubUrl && (
-                <Text style={s.contactTxt}>  |   <Link src={profile.githubUrl} style={s.linkTxt}>GitHub</Link></Text>
+                <Text style={s.contactTxt}>  |   <PDFLink src={profile.githubUrl} style={s.linkTxt}>GitHub</PDFLink></Text>
               )}
               {profile?.portfolioUrl && (
-                <Text style={s.contactTxt}>  |   <Link src={profile.portfolioUrl} style={s.linkTxt}>Portfolio</Link></Text>
+                <Text style={s.contactTxt}>  |   <PDFLink src={profile.portfolioUrl} style={s.linkTxt}>Portfolio</PDFLink></Text>
               )}
               {profile?.websiteUrl && (
-                <Text style={s.contactTxt}>  |   <Link src={profile.websiteUrl} style={s.linkTxt}>Website</Link></Text>
+                <Text style={s.contactTxt}>  |   <PDFLink src={profile.websiteUrl} style={s.linkTxt}>Website</PDFLink></Text>
               )}
             </View>
           </View>
@@ -172,7 +172,7 @@ function ResumePDF({ user, profile, tpl, withPhoto }) {
                       {proj.role && <Text style={s.eMeta}>Role: {proj.role}</Text>}
                     </View>
                     {proj.url && (
-                      <Link src={proj.url.startsWith('http') ? proj.url : `https://${proj.url}`} style={s.linkTxt}>View</Link>
+                      <PDFLink src={proj.url.startsWith('http') ? proj.url : `https://${proj.url}`} style={s.linkTxt}>View</PDFLink>
                     )}
                   </View>
                   {proj.description && <Text style={s.eDesc}>{proj.description}</Text>}
@@ -192,7 +192,7 @@ function ResumePDF({ user, profile, tpl, withPhoto }) {
                       <Text style={s.eTitle}>{res.title}</Text>
                       <Text style={s.eMeta}>{res.journal}{res.year ? ` (${res.year})` : ''}</Text>
                     </View>
-                    {res.doi && <Link src={res.doi.startsWith('http') ? res.doi : `https://doi.org/${res.doi}`} style={s.linkTxt}>DOI</Link>}
+                    {res.doi && <PDFLink src={res.doi.startsWith('http') ? res.doi : `https://doi.org/${res.doi}`} style={s.linkTxt}>DOI</PDFLink>}
                   </View>
                 </View>
               ))}
@@ -290,6 +290,29 @@ export default function ResumeBuilderPage() {
     <ResumePDF user={user} profile={profile} tpl={tpl} withPhoto={includePhoto && hasPhoto} />
   );
 
+  // ── Share helpers ────────────────────────────────────────────────────────
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const publicUrl = `${window.location.origin}/resume/${user?._id}`;
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(publicUrl);
+    toast.success('Resume link copied to clipboard!');
+    setShowShareMenu(false);
+  };
+
+  const handleShareWhatsApp = () => {
+    const msg = encodeURIComponent(`Check out my professional resume 💼\n${publicUrl}`);
+    window.open(`https://wa.me/?text=${msg}`, '_blank');
+    setShowShareMenu(false);
+  };
+
+  const handleShareEmail = () => {
+    const subject = encodeURIComponent(`${user?.name || 'My'} Professional Resume`);
+    const body = encodeURIComponent(`Hi,\n\nI'd like to share my professional resume with you.\n\nView it here: ${publicUrl}\n\nBest regards,\n${user?.name || ''}`);
+    window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
+    setShowShareMenu(false);
+  };
+
   return (
     <div style={{ padding: '24px 28px', maxWidth: 1280, margin: '0 auto' }}>
       <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} className="animate-fade-in">
@@ -370,6 +393,51 @@ export default function ResumeBuilderPage() {
               </button>
             )}
           </PDFDownloadLink>
+
+          {/* Share Resume */}
+          <div style={{ position: 'relative' }}>
+            <button className="btn-secondary" onClick={() => setShowShareMenu(p => !p)}
+              style={{ width: '100%', justifyContent: 'center', padding: '10px', fontSize: 13 }}>
+              <Share2 size={14} /> Share Resume Link
+            </button>
+            {showShareMenu && (
+              <div className="animate-fade-in glass" style={{
+                position: 'absolute', bottom: 'calc(100% + 8px)', left: 0, right: 0,
+                borderRadius: 12, padding: 8, zIndex: 50, border: '1px solid var(--border)',
+              }}>
+                <button onClick={handleCopyLink} style={{
+                  width: '100%', padding: '9px 12px', display: 'flex', alignItems: 'center', gap: 10,
+                  background: 'none', border: 'none', cursor: 'pointer', borderRadius: 8,
+                  fontSize: 13, color: 'var(--text-primary)', transition: 'background 0.15s',
+                }}
+                  onMouseEnter={e => e.currentTarget.style.background='var(--bg-elevated)'}
+                  onMouseLeave={e => e.currentTarget.style.background='none'}>
+                  <Link size={14} color="#818cf8" /> Copy Link
+                </button>
+                <button onClick={handleShareWhatsApp} style={{
+                  width: '100%', padding: '9px 12px', display: 'flex', alignItems: 'center', gap: 10,
+                  background: 'none', border: 'none', cursor: 'pointer', borderRadius: 8,
+                  fontSize: 13, color: 'var(--text-primary)', transition: 'background 0.15s',
+                }}
+                  onMouseEnter={e => e.currentTarget.style.background='var(--bg-elevated)'}
+                  onMouseLeave={e => e.currentTarget.style.background='none'}>
+                  <MessageCircle size={14} color="#25D366" /> WhatsApp
+                </button>
+                <button onClick={handleShareEmail} style={{
+                  width: '100%', padding: '9px 12px', display: 'flex', alignItems: 'center', gap: 10,
+                  background: 'none', border: 'none', cursor: 'pointer', borderRadius: 8,
+                  fontSize: 13, color: 'var(--text-primary)', transition: 'background 0.15s',
+                }}
+                  onMouseEnter={e => e.currentTarget.style.background='var(--bg-elevated)'}
+                  onMouseLeave={e => e.currentTarget.style.background='none'}>
+                  <Mail size={14} color="#6366f1" /> Email
+                </button>
+                <div style={{ fontSize: 10, color: 'var(--text-muted)', padding: '4px 12px', borderTop: '1px solid var(--border)', marginTop: 4 }}>
+                  Shares your public profile page — no download needed
+                </div>
+              </div>
+            )}
+          </div>
 
           <button className="btn-secondary" onClick={() => setShowPreview(p => !p)}
             style={{ width: '100%', justifyContent: 'center', padding: '10px', fontSize: 13 }}>

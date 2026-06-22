@@ -88,6 +88,10 @@ export default function RegisterPage() {
               <button type="submit" className="btn-primary" disabled={loading} style={{ width:'100%',justifyContent:'center',padding:'12px' }}>
                 {loading ? <div className="loader" /> : <><span>Create Account</span><ArrowRight size={16} /></>}
               </button>
+              <div style={{ textAlign:'center', marginTop:14, fontSize:12, color:'var(--text-muted)' }}>
+                Are you a company?{' '}
+                <Link to="/register/company" style={{ color:'#818cf8', fontWeight:600, textDecoration:'none' }}>Register as Employer →</Link>
+              </div>
             </form>
           </div>
         </div>

@@ -28,6 +28,7 @@ app.use('/api/cv',           require('./src/routes/cv'));
 app.use('/api/applications', require('./src/routes/applications'));
 app.use('/api/tools',        require('./src/routes/tools'));
 app.use('/api/subscription', require('./src/routes/subscription'));
+app.use('/api/company',      require('./src/routes/company'));
 
 // ── 404 ────────────────────────────────────────────────────────────────────
 app.use((req, res) => res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` }));
@@ -48,7 +49,7 @@ connectDB().then(() => {
 
   // Schedule daily sync at 2:00 AM
   cron.schedule('0 2 * * *', () => {
-    console.log('⏰ Running scheduled Adzuna job sync...');
+    console.log('⏰ Running scheduled multi-source job sync...');
     fetchAndStoreJobs();
   });
 });

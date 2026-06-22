@@ -21,6 +21,7 @@ const jobSchema = new mongoose.Schema({
   isActive: { type: Boolean, default: true },
   postedAt: { type: Date, default: Date.now },
   closingDate: Date,
+  postedByCompany: { type: require('mongoose').Schema.Types.ObjectId, ref: 'User', default: null },
 
   // AI-computed fields
   inDemandSkills: [String],

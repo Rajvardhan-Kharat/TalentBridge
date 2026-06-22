@@ -14,25 +14,34 @@ const sendToken = (user, statusCode, res) => {
       name: user.name,
       email: user.email,
       avatar: user.avatar,
+      role: user.role,
       onboardingComplete: user.onboardingComplete,
       profile: user.profile,
+      companyProfile: user.companyProfile,
       subscription: user.subscription,
       searchGoals: user.searchGoals,
     },
   });
 };
 
-// @POST /api/auth/register
+// @POST /api/auth/register  (jobseeker or company)
 exports.register = async (req, res, next) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, role, companyProfile } = req.body;
     if (!name || !email || !password)
       return res.status(400).json({ success: false, message: 'All fields required' });
 
     const exists = await User.findOne({ email });
     if (exists) return res.status(400).json({ success: false, message: 'Email already registered' });
 
-    const user = await User.create({ name, email, password });
+    const userRole = role === 'company' ? 'company' : 'jobseeker';
+    const userData = { name, email, password, role: userRole };
+    if (userRole === 'company' && companyProfile) {
+      userData.companyProfile = companyProfile;
+      userData.onboardingComplete = true; // companies skip job-seeker onboarding
+    }
+
+    const user = await User.create(userData);
     sendToken(user, 201, res);
   } catch (err) { next(err); }
 };
@@ -108,5 +117,32 @@ exports.updateAvatar = async (req, res, next) => {
       { new: true, runValidators: false }
     ).select('-password');
     res.json({ success: true, user: updated });
+  } catch (err) { next(err); }
+};
+
+// @PUT /api/auth/company-profile  — update company details
+exports.updateCompanyProfile = async (req, res, next) => {
+  try {
+    const { companyProfile, name } = req.body;
+    const updateFields = {};
+    if (companyProfile) updateFields.companyProfile = companyProfile;
+    if (name) updateFields.name = name;
+    const updated = await User.findByIdAndUpdate(
+      req.user._id,
+      { $set: updateFields },
+      { new: true, runValidators: false }
+    ).select('-password');
+    res.json({ success: true, user: updated });
+  } catch (err) { next(err); }
+};
+
+// @GET /api/auth/public/:userId  — public resume/profile page (no auth required)
+exports.getPublicProfile = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.userId).select(
+      'name avatar profile.currentTitle profile.headline profile.skills profile.workExperience profile.education profile.projects profile.certifications profile.linkedinUrl profile.githubUrl profile.portfolioUrl profile.bio companyProfile role'
+    );
+    if (!user) return res.status(404).json({ success: false, message: 'Profile not found' });
+    res.json({ success: true, user });
   } catch (err) { next(err); }
 };

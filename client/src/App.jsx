@@ -16,6 +16,10 @@ import ProfilePage from './pages/ProfilePage';
 import PricingPage from './pages/PricingPage';
 import ResumeBuilderPage from './pages/ResumeBuilderPage';
 import LearningRoadmapPage from './pages/LearningRoadmapPage';
+import SkillEvaluatorPage from './pages/SkillEvaluatorPage';
+import CompanyPortalPage from './pages/CompanyPortalPage';
+import CompanyRegisterPage from './pages/CompanyRegisterPage';
+import PublicResumePage from './pages/PublicResumePage';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -29,7 +33,16 @@ const PrivateRoute = ({ children }) => {
 
 const OnboardingGuard = ({ children }) => {
   const { user } = useAuth();
+  // Companies skip onboarding (they go to company portal)
+  if (user && user.role === 'company') return children;
   if (user && !user.onboardingComplete) return <Navigate to="/onboarding" replace />;
+  return children;
+};
+
+const CompanyRoute = ({ children }) => {
+  const { user } = useAuth();
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role !== 'company') return <Navigate to="/" replace />;
   return children;
 };
 
@@ -37,10 +50,16 @@ export default function App() {
   const { user } = useAuth();
   return (
     <Routes>
-      <Route path="/login"      element={user ? <Navigate to="/" /> : <LoginPage />} />
-      <Route path="/register"   element={user ? <Navigate to="/" /> : <RegisterPage />} />
-      <Route path="/onboarding" element={<PrivateRoute><OnboardingPage /></PrivateRoute>} />
+      {/* Public auth routes */}
+      <Route path="/login"            element={user ? <Navigate to="/" /> : <LoginPage />} />
+      <Route path="/register"         element={user ? <Navigate to="/" /> : <RegisterPage />} />
+      <Route path="/register/company" element={user ? <Navigate to="/company-portal" /> : <CompanyRegisterPage />} />
+      <Route path="/onboarding"       element={<PrivateRoute><OnboardingPage /></PrivateRoute>} />
 
+      {/* Public resume page — no login required */}
+      <Route path="/resume/:userId"   element={<PublicResumePage />} />
+
+      {/* Main app — job seekers */}
       <Route path="/" element={<PrivateRoute><OnboardingGuard><Layout /></OnboardingGuard></PrivateRoute>}>
         <Route index                    element={<DashboardPage />} />
         <Route path="jobs"              element={<JobDiscoveryPage />} />
@@ -53,7 +72,10 @@ export default function App() {
         <Route path="profile"           element={<ProfilePage />} />
         <Route path="pricing"           element={<PricingPage />} />
         <Route path="resume"            element={<ResumeBuilderPage />} />
-        <Route path="learning-roadmap"   element={<LearningRoadmapPage />} />
+        <Route path="learning-roadmap"  element={<LearningRoadmapPage />} />
+        <Route path="skill-evaluator"   element={<SkillEvaluatorPage />} />
+        {/* Company portal nested inside Layout so nav works */}
+        <Route path="company-portal"    element={<CompanyRoute><CompanyPortalPage /></CompanyRoute>} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" />} />
