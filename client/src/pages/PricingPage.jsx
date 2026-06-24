@@ -47,6 +47,30 @@ function PlanFrame({ plan, size = 60 }) {
   );
 }
 
+const COMPANY_PLANS = [
+  {
+    id: 'free', name: 'Company Free', price: 0, color: '#64748b',
+    gradient: 'linear-gradient(135deg,#475569,#64748b)',
+    badge: '🆓', frame: 'none',
+    features: ['1 job post/month', 'Basic candidate pool', 'Company profile'],
+    limits: ['No featured listings', 'No direct messaging'],
+  },
+  {
+    id: 'company_basic', name: 'Company Basic', price: 1999, color: '#3b82f6',
+    gradient: 'linear-gradient(135deg,#2563eb,#3b82f6,#60a5fa)',
+    badge: '🏢', frame: 'none', popular: true,
+    features: ['5 job posts/month', 'Basic candidate filtering', 'Company profile page', 'Standard email support'],
+    limits: ['No premium support'],
+  },
+  {
+    id: 'company_pro', name: 'Company Pro', price: 4999, color: '#10b981',
+    gradient: 'linear-gradient(135deg,#059669,#10b981,#34d399)',
+    badge: '🚀', frame: 'gold',
+    features: ['Unlimited job postings', 'Advanced AI candidate matching', 'Featured company profile', 'Direct candidate messaging', 'Priority 24/7 support'],
+    limits: [],
+  },
+];
+
 export default function PricingPage() {
   const { user, updateUser } = useAuth();
   const navigate = useNavigate();
@@ -54,22 +78,8 @@ export default function PricingPage() {
   const [showDemo, setShowDemo] = useState(null);
   const currentPlan = user?.subscription?.plan || 'free';
 
-  // Company and Admin users should not see job-seeker plans
-  if (user?.role === 'company') {
-    return (
-      <div style={{ padding: '60px 32px', maxWidth: 600, margin: '0 auto', textAlign: 'center' }}>
-        <div style={{ fontSize: 56, marginBottom: 20 }}>🏢</div>
-        <h1 style={{ fontSize: 26, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 12 }}>Company Account</h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: 15, marginBottom: 24 }}>
-          Subscription plans shown here are for job seekers only.<br />
-          Company billing is managed separately.
-        </p>
-        <button onClick={() => navigate('/company-portal')} className="btn-primary" style={{ justifyContent: 'center' }}>
-          <Building2 size={16} /> Go to Company Portal
-        </button>
-      </div>
-    );
-  }
+  const isCompany = user?.role === 'company';
+  const displayPlans = isCompany ? COMPANY_PLANS : PLANS;
 
   if (user?.role === 'admin') {
     return (
@@ -141,7 +151,7 @@ export default function PricingPage() {
 
       {/* Plan cards */}
       <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:24, marginBottom:48 }}>
-        {PLANS.map(plan => {
+        {displayPlans.map(plan => {
           const isCurrent = currentPlan === plan.id;
           return (
             <div key={plan.id} className="glass" style={{

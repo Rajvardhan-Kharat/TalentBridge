@@ -25,4 +25,18 @@ const adminOnly = (req, res, next) => {
   next();
 };
 
-module.exports = { protect, adminOnly };
+const companyOnly = (req, res, next) => {
+  if (!req.user || req.user.role !== 'company') {
+    return res.status(403).json({ success: false, message: 'Access denied: Companies only' });
+  }
+  next();
+};
+
+const jobseekerOnly = (req, res, next) => {
+  if (!req.user || req.user.role !== 'jobseeker') {
+    return res.status(403).json({ success: false, message: 'Access denied: Jobseekers only' });
+  }
+  next();
+};
+
+module.exports = { protect, adminOnly, companyOnly, jobseekerOnly };

@@ -28,7 +28,7 @@ const userSchema = new mongoose.Schema({
 
   // ── Subscription / Revenue Model ────────────────────────────────────────
   subscription: {
-    plan: { type: String, enum: ['free', 'gold', 'platinum'], default: 'free' },
+    plan: { type: String, enum: ['free', 'gold', 'platinum', 'company_basic', 'company_pro'], default: 'free' },
     status: { type: String, enum: ['active', 'cancelled', 'expired', 'trial'], default: 'active' },
     razorpayOrderId: String,
     razorpayPaymentId: String,

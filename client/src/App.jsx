@@ -19,6 +19,7 @@ import LearningRoadmapPage from './pages/LearningRoadmapPage';
 import SkillEvaluatorPage from './pages/SkillEvaluatorPage';
 import CompanyPortalPage from './pages/CompanyPortalPage';
 import CompanyRegisterPage from './pages/CompanyRegisterPage';
+import CompanyProfilePage from './pages/CompanyProfilePage';
 import PublicResumePage from './pages/PublicResumePage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 
@@ -78,6 +79,13 @@ const RoleIndexRedirect = () => {
   return <DashboardPage />;
 };
 
+// Helper component to route Profile page based on role
+const ProfileRouteSwitch = () => {
+  const { user } = useAuth();
+  if (user?.role === 'company') return <CompanyProfilePage />;
+  return <ProfilePage />;
+};
+
 export default function App() {
   const { user } = useAuth();
   return (
@@ -104,7 +112,7 @@ export default function App() {
         <Route path="portal-scanner"    element={<JobseekerRoute><PortalScannerPage /></JobseekerRoute>} />
         <Route path="tracker"           element={<JobseekerRoute><ApplicationTrackerPage /></JobseekerRoute>} />
         <Route path="story-bank"        element={<JobseekerRoute><StoryBankPage /></JobseekerRoute>} />
-        <Route path="profile"           element={<ProfilePage />} />
+        <Route path="profile"           element={<ProfileRouteSwitch />} />
         <Route path="pricing"           element={<PricingPage />} />
         <Route path="resume"            element={<JobseekerRoute><ResumeBuilderPage /></JobseekerRoute>} />
         <Route path="learning-roadmap"  element={<JobseekerRoute><LearningRoadmapPage /></JobseekerRoute>} />

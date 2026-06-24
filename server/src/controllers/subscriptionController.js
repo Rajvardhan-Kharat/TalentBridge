@@ -94,6 +94,49 @@ const PLANS = {
       careerCoach: true,
     },
   },
+  company_basic: {
+    id: 'company_basic',
+    name: 'Company Basic',
+    price: 199900,   // ₹1999/month
+    priceMonthly: 1999,
+    currency: 'INR',
+    color: '#3b82f6',
+    gradient: 'linear-gradient(135deg, #2563eb, #3b82f6, #60a5fa)',
+    frame: 'none',
+    badge: '🏢',
+    features: [
+      'Post up to 5 jobs/month',
+      'Basic candidate filtering',
+      'Company profile page',
+      'Standard email support',
+    ],
+    limits: {
+      jobs: 5,
+      premiumSupport: false,
+    },
+  },
+  company_pro: {
+    id: 'company_pro',
+    name: 'Company Pro',
+    price: 499900,   // ₹4999/month
+    priceMonthly: 4999,
+    currency: 'INR',
+    color: '#10b981',
+    gradient: 'linear-gradient(135deg, #059669, #10b981, #34d399)',
+    frame: 'gold',
+    badge: '🚀',
+    features: [
+      'Unlimited job postings',
+      'Advanced AI candidate matching',
+      'Featured company profile',
+      'Direct candidate messaging',
+      'Priority 24/7 support',
+    ],
+    limits: {
+      jobs: -1,
+      premiumSupport: true,
+    },
+  },
 };
 
 // @GET /api/subscription/plans

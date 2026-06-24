@@ -150,7 +150,7 @@ export default function Layout() {
               <Sparkles size={17} color="white" />
             </div>
             <div>
-              <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontWeight: 800, fontSize: 15, color: '#f1f5f9' }}>TalentBridge</div>
+              <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontWeight: 800, fontSize: 15, color: 'var(--text-primary)' }}>TalentBridge</div>
               <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
                 {isCompany ? 'Company Portal' : 'Smart Talent Platform · All Sectors'}
               </div>

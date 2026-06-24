@@ -19,6 +19,34 @@ export const AuthProvider = ({ children }) => {
     } else { setLoading(false); }
   }, []);
 
+  // Inactivity Auto-Logout (30 minutes)
+  useEffect(() => {
+    if (!user) return; // Only track when logged in
+    
+    let timeoutId;
+    const INACTIVITY_LIMIT = 30 * 60 * 1000; // 30 minutes
+    
+    const resetTimer = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        logout();
+        // Optional: you could use a toast here if imported, but context can't easily trigger toast without breaking pureness, 
+        // relying on the redirect from AuthGuards to send them to login.
+        alert('Session expired due to inactivity. Please log in again.');
+      }, INACTIVITY_LIMIT);
+    };
+
+    // Listeners for activity
+    const events = ['mousemove', 'keydown', 'scroll', 'click'];
+    events.forEach(e => window.addEventListener(e, resetTimer));
+    resetTimer(); // Start the timer
+
+    return () => {
+      clearTimeout(timeoutId);
+      events.forEach(e => window.removeEventListener(e, resetTimer));
+    };
+  }, [user]);
+
   const login = async (email, password) => {
     const { data } = await api.post('/auth/login', { email, password });
     localStorage.setItem('hi_token', data.token);
