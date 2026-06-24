@@ -20,6 +20,7 @@ import SkillEvaluatorPage from './pages/SkillEvaluatorPage';
 import CompanyPortalPage from './pages/CompanyPortalPage';
 import CompanyRegisterPage from './pages/CompanyRegisterPage';
 import PublicResumePage from './pages/PublicResumePage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -33,8 +34,8 @@ const PrivateRoute = ({ children }) => {
 
 const OnboardingGuard = ({ children }) => {
   const { user } = useAuth();
-  // Companies skip onboarding (they go to company portal)
-  if (user && user.role === 'company') return children;
+  // Companies and admins skip onboarding
+  if (user && (user.role === 'company' || user.role === 'admin')) return children;
   if (user && !user.onboardingComplete) return <Navigate to="/onboarding" replace />;
   return children;
 };
@@ -43,6 +44,18 @@ const CompanyRoute = ({ children }) => {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
   if (user.role !== 'company') return <Navigate to="/" replace />;
+  return children;
+};
+
+const AdminRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  if (loading) return (
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100vh', background:'#0a0a0f' }}>
+      <div className="loader" style={{ width: 40, height: 40 }} />
+    </div>
+  );
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role !== 'admin') return <Navigate to="/" replace />;
   return children;
 };
 
@@ -55,6 +68,9 @@ export default function App() {
       <Route path="/register"         element={user ? <Navigate to="/" /> : <RegisterPage />} />
       <Route path="/register/company" element={user ? <Navigate to="/company-portal" /> : <CompanyRegisterPage />} />
       <Route path="/onboarding"       element={<PrivateRoute><OnboardingPage /></PrivateRoute>} />
+
+      {/* Admin dashboard — standalone page, no Layout sidebar */}
+      <Route path="/admin" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
 
       {/* Public resume page — no login required */}
       <Route path="/resume/:userId"   element={<PublicResumePage />} />
@@ -82,3 +98,4 @@ export default function App() {
     </Routes>
   );
 }
+

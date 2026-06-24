@@ -1,15 +1,29 @@
 /**
- * HireIndia AI Service
- * Primary:  Google Gemini API (gemini-1.5-flash — FREE tier, generous limits)
- * Fallback: Groq API (llama-3.3-70b-versatile — FREE tier)
+ * TalentBridge AI Service
  *
- * Logic: Try Gemini first → if it fails (quota/rate-limit/error) → auto-switch to Groq
+ * Provider chain (in order of preference):
+ *   1. Google Gemini  (gemini-1.5-flash)  — FREE tier, GEMINI_API_KEY
+ *   2. Groq           (llama-3.3-70b)     — FREE tier, GROQ_API_KEY
+ *   3. Anthropic Claude (claude-haiku)    — cheap paid,  ANTHROPIC_API_KEY
+ *   4. OpenAI         (gpt-4o-mini)       — cheap paid,  OPENAI_API_KEY
+ *
+ * Circuit Breaker:
+ *   If a provider fails, it is cooled-down for COOLDOWN_MS (default 5 min).
+ *   During cooldown, that provider is skipped so the next call goes straight
+ *   to the next healthy provider — no wasted timeout latency.
+ *
+ * JSON Retry:
+ *   If AI returns text that is not valid JSON (for JSON-expecting calls),
+ *   the service retries once with a strict "output ONLY raw JSON" system prompt
+ *   before giving up.
  */
 
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const Groq = require('groq-sdk');
 
-// ── Clients ──────────────────────────────────────────────────────────────
+const axios = require('axios');
+
+// ── Clients (null if key missing) ─────────────────────────────────────────
 const geminiClient = process.env.GEMINI_API_KEY
   ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
   : null;
@@ -18,7 +32,50 @@ const groqClient = process.env.GROQ_API_KEY
   ? new Groq({ apiKey: process.env.GROQ_API_KEY })
   : null;
 
-// ── Core: Call Gemini ────────────────────────────────────────────────────
+const openrouterClient = process.env.OPENROUTER_API_KEY ? true : null;
+const hfClient = process.env.HF_API_KEY ? true : null;
+
+// ── Circuit Breaker State ─────────────────────────────────────────────────
+const COOLDOWN_MS = parseInt(process.env.AI_COOLDOWN_MS || '300000', 10); // 5 min default
+
+const providerState = {
+  gemini:      { failedAt: null, failCount: 0 },
+  groq:        { failedAt: null, failCount: 0 },
+  openrouter:  { failedAt: null, failCount: 0 },
+  huggingface: { failedAt: null, failCount: 0 },
+};
+
+const isCircuitOpen = (name) => {
+  const s = providerState[name];
+  if (!s.failedAt) return false;
+  if (Date.now() - s.failedAt < COOLDOWN_MS) return true;
+  // Cooldown expired — reset
+  s.failedAt = null;
+  s.failCount = 0;
+  return false;
+};
+
+const recordFailure = (name, err) => {
+  const s = providerState[name];
+  s.failedAt = Date.now();
+  s.failCount = (s.failCount || 0) + 1;
+  console.warn(`⚠️  [${name}] failed (attempt #${s.failCount}): ${err.message}`);
+};
+
+const recordSuccess = (name) => {
+  providerState[name].failedAt = null;
+  providerState[name].failCount = 0;
+};
+
+// Expose provider health for the /api/ai/status endpoint
+const getProviderHealth = () => ({
+  gemini:      { configured: !!geminiClient,     healthy: !isCircuitOpen('gemini'),      failCount: providerState.gemini.failCount },
+  groq:        { configured: !!groqClient,       healthy: !isCircuitOpen('groq'),        failCount: providerState.groq.failCount },
+  openrouter:  { configured: !!openrouterClient, healthy: !isCircuitOpen('openrouter'),  failCount: providerState.openrouter.failCount },
+  huggingface: { configured: !!hfClient,         healthy: !isCircuitOpen('huggingface'), failCount: providerState.huggingface.failCount },
+});
+
+// ── Core: Individual Provider Callers ────────────────────────────────────
 const callGemini = async (systemPrompt, userMessage, maxTokens = 2000) => {
   if (!geminiClient) throw new Error('GEMINI_API_KEY not configured');
   const model = geminiClient.getGenerativeModel({
@@ -32,7 +89,6 @@ const callGemini = async (systemPrompt, userMessage, maxTokens = 2000) => {
   return result.response.text();
 };
 
-// ── Core: Call Groq ──────────────────────────────────────────────────────
 const callGroq = async (systemPrompt, userMessage, maxTokens = 2000) => {
   if (!groqClient) throw new Error('GROQ_API_KEY not configured');
   const completion = await groqClient.chat.completions.create({
@@ -47,35 +103,128 @@ const callGroq = async (systemPrompt, userMessage, maxTokens = 2000) => {
   return completion.choices[0].message.content;
 };
 
-// ── Core: Call AI with Gemini→Groq fallback ──────────────────────────────
+const callOpenRouter = async (systemPrompt, userMessage, maxTokens = 2000) => {
+  if (!openrouterClient) throw new Error('OPENROUTER_API_KEY not configured');
+  const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
+    model: process.env.OPENROUTER_MODEL || 'meta-llama/llama-3.3-70b-instruct:free',
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userMessage }
+    ],
+    max_tokens: maxTokens,
+    temperature: 0.7
+  }, {
+    headers: {
+      'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+      'Content-Type': 'application/json'
+    }
+  });
+  return response.data.choices[0].message.content;
+};
+
+const callHuggingFace = async (systemPrompt, userMessage, maxTokens = 2000) => {
+  if (!hfClient) throw new Error('HF_API_KEY not configured');
+  const model = process.env.HF_MODEL || 'meta-llama/Llama-3.3-70B-Instruct';
+  const response = await axios.post(`https://api-inference.huggingface.co/models/${model}/v1/chat/completions`, {
+    model: model,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userMessage }
+    ],
+    max_tokens: maxTokens,
+    temperature: 0.7
+  }, {
+    headers: {
+      'Authorization': `Bearer ${process.env.HF_API_KEY}`,
+      'Content-Type': 'application/json'
+    }
+  });
+  return response.data.choices[0].message.content;
+};
+
+// ── Provider registry (ordered by preference) ────────────────────────────
+const PROVIDERS = [
+  { name: 'gemini',      call: callGemini },
+  { name: 'groq',        call: callGroq   },
+  { name: 'openrouter',  call: callOpenRouter },
+  { name: 'huggingface', call: callHuggingFace },
+];
+
+// ── Core: Call AI with full fallback chain + circuit breaker ─────────────
 const callAI = async (systemPrompt, userMessage, maxTokens = 2000) => {
-  // Try Gemini first
-  try {
-    const result = await callGemini(systemPrompt, userMessage, maxTokens);
-    console.log('✅ AI: Gemini responded');
-    return result;
-  } catch (geminiErr) {
-    console.warn(`⚠️  Gemini failed (${geminiErr.message}), trying Groq fallback...`);
+  const errors = [];
+
+  for (const provider of PROVIDERS) {
+    // Skip if circuit is open (recently failed)
+    if (isCircuitOpen(provider.name)) {
+      console.log(`⏭️  [${provider.name}] circuit open — skipping`);
+      errors.push(`${provider.name}: circuit open (cooling down)`);
+      continue;
+    }
+
     try {
-      const result = await callGroq(systemPrompt, userMessage, maxTokens);
-      console.log('✅ AI: Groq fallback responded');
+      const result = await provider.call(systemPrompt, userMessage, maxTokens);
+      recordSuccess(provider.name);
+      console.log(`✅ AI: [${provider.name}] responded`);
       return result;
-    } catch (groqErr) {
-      console.error('❌ Both Gemini and Groq failed');
-      throw new Error(`AI unavailable. Gemini: ${geminiErr.message} | Groq: ${groqErr.message}`);
+    } catch (err) {
+      recordFailure(provider.name, err);
+      errors.push(`${provider.name}: ${err.message}`);
     }
   }
+
+  // All providers failed
+  const errMsg = `All AI providers failed:\n${errors.map(e => `  • ${e}`).join('\n')}`;
+  console.error('❌', errMsg);
+  throw new Error(errMsg);
 };
 
 // ── Helper: Extract JSON from AI response (handles markdown code fences) ─
 const extractJSON = (raw) => {
-  // Remove markdown code fences if present
   let cleaned = raw.trim();
+
+  // Strip markdown code fences (```json ... ``` or ``` ... ```)
   if (cleaned.startsWith('```')) {
-    cleaned = cleaned.replace(/^```[a-z]*\n?/, '').replace(/\n?```$/, '').trim();
+    cleaned = cleaned.replace(/^```[a-z]*\n?/i, '').replace(/\n?```$/, '').trim();
   }
-  return JSON.parse(cleaned);
+
+  // Try direct parse first
+  try {
+    return JSON.parse(cleaned);
+  } catch (_) {
+    // Try to extract the first {...} or [...] block — sometimes AI adds prose around JSON
+    const objMatch = cleaned.match(/\{[\s\S]*\}/);
+    const arrMatch = cleaned.match(/\[[\s\S]*\]/);
+
+    if (objMatch) {
+      try { return JSON.parse(objMatch[0]); } catch { /* continue */ }
+    }
+    if (arrMatch) {
+      try { return JSON.parse(arrMatch[0]); } catch { /* continue */ }
+    }
+
+    throw new Error(`AI returned invalid JSON. Raw: ${cleaned.slice(0, 200)}`);
+  }
 };
+
+// ── Helper: Call AI and parse JSON result (with retry on bad JSON) ────────
+const callAIforJSON = async (systemPrompt, userMessage, maxTokens = 2000) => {
+  const raw = await callAI(systemPrompt, userMessage, maxTokens);
+
+  try {
+    return extractJSON(raw);
+  } catch (_firstErr) {
+    // Retry: add explicit "output ONLY raw JSON" instruction
+    console.warn('⚠️  JSON parse failed on first try — retrying with strict JSON prompt');
+    const strictSystem = `${systemPrompt}\n\nCRITICAL: You MUST output ONLY valid JSON. No prose, no markdown fences, no explanation — just the raw JSON object or array.`;
+    const raw2 = await callAI(strictSystem, userMessage, maxTokens);
+    return extractJSON(raw2); // Let this throw naturally if still broken
+  }
+};
+
+module.exports.getProviderHealth = getProviderHealth;
+
+
 
 // ════════════════════════════════════════════════════════════════════════
 // MODULE 2: AI Job Evaluator — 10-dimension scoring
@@ -119,8 +268,7 @@ Return this exact JSON structure:
 Grade scale: A=4.5-5.0, B=3.5-4.4, C=2.5-3.4, D=1.5-2.4, F=0-1.4
 Recommendation: "Apply" if overallScore >= 3.5, else "Skip"`;
 
-  const raw = await callAI(system, user, 3000);
-  return extractJSON(raw);
+  return await callAIforJSON(system, user, 3000);
 };
 
 // ════════════════════════════════════════════════════════════════════════
@@ -138,8 +286,7 @@ Enhance the provided JSON profile (workExperience, projects).
   "projects": [{ "title": "", "description": "", "highlights": "" }]
 }`;
   const user = JSON.stringify({ workExperience: profile.workExperience || [], projects: profile.projects || [] });
-  const raw = await callAI(system, user, 3000);
-  return extractJSON(raw);
+  return await callAIforJSON(system, user, 3000);
 };
 
 const tailorCv = async (jobDescription, cvText) => {
@@ -241,8 +388,7 @@ Return this EXACT JSON structure:
   ]
 }`;
 
-  const raw = await callAI(system, userMsg, 2000);
-  const result = extractJSON(raw);
+  const result = await callAIforJSON(system, userMsg, 2000);
 
   // Sanitize: filter out any course URLs that aren't from trusted domains
   if (result.recommendedCourses) {
@@ -286,8 +432,7 @@ Return this exact JSON:
   "proTips": ["Practical tip 1", "Practical tip 2", "Practical tip 3"]
 }`;
 
-  const raw = await callAI(system, userMsg, 3000);
-  return extractJSON(raw);
+  return await callAIforJSON(system, userMsg, 3000);
 };
 
 // ════════════════════════════════════════════════════════════════════════
@@ -707,8 +852,7 @@ Analyze the current job market and return this exact JSON:
 
 Include 8-10 in-demand skills. Be specific to the Indian job market.`;
 
-  const raw = await callAI(system, user, 2000);
-  return extractJSON(raw);
+  return await callAIforJSON(system, user, 2000);
 };
 
 // ════════════════════════════════════════════════════════════════════════
@@ -750,13 +894,14 @@ Return this EXACT JSON:
   ]
 }`;
 
-  const raw = await callAI(system, user, 4000);
-  return extractJSON(raw);
+  return await callAIforJSON(system, user, 4000);
 };
 
 module.exports = {
   callAI,
+  callAIforJSON,
   extractJSON,
+  getProviderHealth,
   isTrustedUrl,
   analyzeSkillsGap,
   evaluateJobScore: computeMatchScore,

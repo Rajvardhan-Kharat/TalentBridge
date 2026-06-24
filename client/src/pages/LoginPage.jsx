@@ -17,7 +17,13 @@ export default function LoginPage() {
     try {
       const user = await login(form.email, form.password);
       toast.success(`Welcome back, ${user.name}!`);
-      navigate(user.onboardingComplete ? '/' : '/onboarding');
+      if (user.role === 'admin') {
+        navigate('/admin');
+      } else if (user.role === 'company') {
+        navigate('/company-portal');
+      } else {
+        navigate(user.onboardingComplete ? '/' : '/onboarding');
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Login failed');
     } finally { setLoading(false); }

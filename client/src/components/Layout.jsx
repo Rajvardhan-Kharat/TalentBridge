@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import {
   LayoutDashboard, Search, Brain, FileText, Wand2,
   Globe, Kanban, BookOpen, LogOut, Sparkles, ChevronRight,
-  User, Crown, Star, FileDown, Moon, Sun, Map, Building, Zap
+  User, Crown, Star, FileDown, Moon, Sun, Map, Building, Zap, Shield
 } from 'lucide-react';
 
 const navItems = [
@@ -58,6 +58,7 @@ export default function Layout() {
   const plan = user?.subscription?.plan || 'free';
   const pm = PLAN_META[plan];
   const isCompany = user?.role === 'company';
+  const isAdmin = user?.role === 'admin';
   const activeNav = isCompany ? companyNavItems : navItems;
   
   const [isDark, setIsDark] = useState(() => {
@@ -149,6 +150,31 @@ export default function Layout() {
             </NavLink>
           ))}
         </nav>
+
+        {/* Admin Dashboard Link — only for admins */}
+        {isAdmin && (
+          <div style={{ padding: '0 10px 6px' }}>
+            <NavLink to="/admin" style={{ textDecoration: 'none' }}>
+              {({ isActive }) => (
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px',
+                  borderRadius: 10, marginBottom: 2,
+                  background: isActive ? 'rgba(239,68,68,0.12)' : 'rgba(239,68,68,0.06)',
+                  border: isActive ? '1px solid rgba(239,68,68,0.3)' : '1px solid rgba(239,68,68,0.15)',
+                  transition: 'all 0.2s', cursor: 'pointer',
+                }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, background: 'rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Shield size={15} color="#ef4444" />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#ef4444' }}>Admin Dashboard</div>
+                    <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>Platform monitoring</div>
+                  </div>
+                </div>
+              )}
+            </NavLink>
+          </div>
+        )}
 
         {/* Profile Strength Meter */}
         {(() => {
