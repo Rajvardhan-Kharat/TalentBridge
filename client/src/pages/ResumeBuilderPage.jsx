@@ -333,18 +333,34 @@ export default function ResumeBuilderPage() {
           <div className="glass" style={{ padding: 18 }}>
             <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 12, letterSpacing: 0.5, textTransform: 'uppercase' }}>Template</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-              {TEMPLATES.map(t => (
-                <button key={t.id} type="button" onClick={() => setTemplate(t.id)}
-                  style={{
-                    padding: '10px 12px', borderRadius: 10, cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s',
-                    border: `2px solid ${template === t.id ? t.color : 'var(--border)'}`,
-                    background: template === t.id ? `${t.color}14` : 'var(--bg-elevated)',
-                    display: 'flex', alignItems: 'center', gap: 10,
-                  }}>
-                  <div style={{ width: 18, height: 18, borderRadius: 5, background: t.color, flexShrink: 0 }} />
-                  <span style={{ fontSize: 13, fontWeight: 600, color: template === t.id ? t.color : 'var(--text-primary)' }}>{t.name}</span>
-                </button>
-              ))}
+              {TEMPLATES.map((t, i) => {
+                const plan = user?.subscription?.plan || 'free';
+                let isLocked = false;
+                if (plan === 'free' && i > 0) isLocked = true;
+                if (plan === 'gold' && i > 4) isLocked = true; // Gold gives 5, but we only have 5 anyway, so it won't lock for now
+                
+                return (
+                  <button key={t.id} type="button" 
+                    onClick={() => {
+                      if (isLocked) {
+                        toast.error(`Please upgrade your plan to unlock the ${t.name} template.`);
+                        return;
+                      }
+                      setTemplate(t.id);
+                    }}
+                    style={{
+                      padding: '10px 12px', borderRadius: 10, cursor: isLocked ? 'not-allowed' : 'pointer', textAlign: 'left', transition: 'all 0.2s',
+                      border: `2px solid ${template === t.id ? t.color : 'var(--border)'}`,
+                      background: template === t.id ? `${t.color}14` : 'var(--bg-elevated)',
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      opacity: isLocked ? 0.6 : 1,
+                    }}>
+                    <div style={{ width: 18, height: 18, borderRadius: 5, background: t.color, flexShrink: 0 }} />
+                    <span style={{ fontSize: 13, fontWeight: 600, color: template === t.id ? t.color : 'var(--text-primary)' }}>{t.name}</span>
+                    {isLocked && <div style={{ marginLeft: 'auto', fontSize: 10 }}>🔒</div>}
+                  </button>
+                );
+              })}
             </div>
           </div>
 

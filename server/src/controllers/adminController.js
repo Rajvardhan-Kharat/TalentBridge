@@ -15,6 +15,8 @@ exports.getStats = async (req, res, next) => {
       goldUsers,
       platinumUsers,
       freeUsers,
+      companyBasicUsers,
+      companyProUsers,
       totalApplications,
       recentSignups,
     ] = await Promise.all([
@@ -25,6 +27,8 @@ exports.getStats = async (req, res, next) => {
       User.countDocuments({ 'subscription.plan': 'gold', 'subscription.status': 'active' }),
       User.countDocuments({ 'subscription.plan': 'platinum', 'subscription.status': 'active' }),
       User.countDocuments({ 'subscription.plan': 'free' }),
+      User.countDocuments({ 'subscription.plan': 'company_basic', 'subscription.status': 'active' }),
+      User.countDocuments({ 'subscription.plan': 'company_pro', 'subscription.status': 'active' }),
       Application.countDocuments({}),
       User.find({})
         .sort({ createdAt: -1 })
@@ -33,7 +37,7 @@ exports.getStats = async (req, res, next) => {
     ]);
 
     // Revenue calculation (demo — based on active paid users)
-    const monthlyRevenue = (goldUsers * 499) + (platinumUsers * 999);
+    const monthlyRevenue = (goldUsers * 499) + (platinumUsers * 999) + (companyBasicUsers * 1999) + (companyProUsers * 4999);
     const totalRevenue = monthlyRevenue; // simplified for demo
 
     res.json({
@@ -46,6 +50,8 @@ exports.getStats = async (req, res, next) => {
         goldUsers,
         platinumUsers,
         freeUsers,
+        companyBasicUsers,
+        companyProUsers,
         totalApplications,
         monthlyRevenue,
         totalRevenue,
@@ -155,7 +161,7 @@ exports.getRevenue = async (req, res, next) => {
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59);
-      const [gold, platinum] = await Promise.all([
+      const [gold, platinum, companyBasic, companyPro] = await Promise.all([
         User.countDocuments({
           'subscription.plan': 'gold',
           'subscription.status': 'active',
@@ -168,12 +174,26 @@ exports.getRevenue = async (req, res, next) => {
           'subscription.startDate': { $lte: end },
           $or: [{ 'subscription.endDate': { $gte: d } }, { 'subscription.endDate': null }],
         }),
+        User.countDocuments({
+          'subscription.plan': 'company_basic',
+          'subscription.status': 'active',
+          'subscription.startDate': { $lte: end },
+          $or: [{ 'subscription.endDate': { $gte: d } }, { 'subscription.endDate': null }],
+        }),
+        User.countDocuments({
+          'subscription.plan': 'company_pro',
+          'subscription.status': 'active',
+          'subscription.startDate': { $lte: end },
+          $or: [{ 'subscription.endDate': { $gte: d } }, { 'subscription.endDate': null }],
+        }),
       ]);
       months.push({
         month: d.toLocaleString('default', { month: 'short', year: '2-digit' }),
         gold,
         platinum,
-        revenue: gold * 499 + platinum * 999,
+        companyBasic,
+        companyPro,
+        revenue: (gold * 499) + (platinum * 999) + (companyBasic * 1999) + (companyPro * 4999),
       });
     }
 

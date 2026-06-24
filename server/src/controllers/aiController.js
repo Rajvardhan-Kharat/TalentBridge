@@ -9,6 +9,26 @@ exports.evaluateJobPost = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'jobDescription is required' });
 
     const user = await User.findById(req.user._id);
+    const plan = user.subscription?.plan || 'free';
+    
+    // Check daily limits
+    const today = new Date().toDateString();
+    const lastDate = user.usageStats?.lastAiSearchDate?.toDateString();
+    
+    if (lastDate !== today) {
+      user.usageStats = { lastAiSearchDate: new Date(), aiSearchesToday: 0 };
+    }
+    
+    if (plan === 'free' && user.usageStats.aiSearchesToday >= 3) {
+      return res.status(403).json({ success: false, message: 'Free plan limit reached: 3 smart evaluations per day. Please upgrade.' });
+    }
+    if (plan === 'gold' && user.usageStats.aiSearchesToday >= 20) {
+      return res.status(403).json({ success: false, message: 'Gold plan limit reached: 20 smart evaluations per day. Please upgrade to Platinum.' });
+    }
+    
+    // Increment usage
+    user.usageStats.aiSearchesToday += 1;
+    await user.save();
     const cvText = user.baseCv?.extractedText || '';
     const profileSummary = `
 Name: ${user.name}

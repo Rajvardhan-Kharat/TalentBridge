@@ -24,6 +24,8 @@ const PLAN_COLORS = {
   free: { bg: '#64748b20', color: '#94a3b8', label: 'Free', badge: '🆓' },
   gold: { bg: '#f59e0b20', color: '#f59e0b', label: 'Gold', badge: '⭐' },
   platinum: { bg: '#8b5cf620', color: '#8b5cf6', label: 'Platinum', badge: '💎' },
+  company_basic: { bg: '#3b82f620', color: '#3b82f6', label: 'Company Basic', badge: '🏢' },
+  company_pro: { bg: '#10b98120', color: '#10b981', label: 'Company Pro', badge: '🚀' },
 };
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -78,6 +80,12 @@ function RevenueBar({ data }) {
         <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
           <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600 }}>{fmtCurr(d.revenue)}</div>
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 2, justifyContent: 'flex-end', height: 120 }}>
+            {d.companyPro > 0 && (
+              <div style={{ height: Math.max(4, (d.companyPro * 4999 / maxRev) * 120), background: 'linear-gradient(180deg,#10b981,#059669)', borderRadius: 4 }} title={`Company Pro: ${d.companyPro} users`} />
+            )}
+            {d.companyBasic > 0 && (
+              <div style={{ height: Math.max(4, (d.companyBasic * 1999 / maxRev) * 120), background: 'linear-gradient(180deg,#3b82f6,#2563eb)', borderRadius: 4 }} title={`Company Basic: ${d.companyBasic} users`} />
+            )}
             {d.platinum > 0 && (
               <div style={{ height: Math.max(4, (d.platinum * 999 / maxRev) * 120), background: 'linear-gradient(180deg,#8b5cf6,#6d28d9)', borderRadius: 4 }} title={`Platinum: ${d.platinum} users`} />
             )}
@@ -285,6 +293,8 @@ export default function AdminDashboardPage() {
                 <StatCard icon={Building2} label="Companies" value={fmt(stats?.totalCompanies)} color="#3b82f6" />
                 <StatCard icon={Star} label="Gold Members" value={fmt(stats?.goldUsers)} sub="₹499/mo each" color="#f59e0b" />
                 <StatCard icon={Gem} label="Platinum Members" value={fmt(stats?.platinumUsers)} sub="₹999/mo each" color="#8b5cf6" />
+                <StatCard icon={Building2} label="Company Basic" value={fmt(stats?.companyBasicUsers)} sub="₹1999/mo each" color="#3b82f6" />
+                <StatCard icon={Building2} label="Company Pro" value={fmt(stats?.companyProUsers)} sub="₹4999/mo each" color="#10b981" />
                 <StatCard icon={DollarSign} label="Monthly Revenue" value={fmtCurr(stats?.monthlyRevenue)} sub="Estimated MRR" color="#10b981" />
                 <StatCard icon={UserCheck} label="Applications" value={fmt(stats?.totalApplications)} color="#f97316" />
               </div>

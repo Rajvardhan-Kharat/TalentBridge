@@ -28,6 +28,26 @@ exports.postJob = [isCompany, async (req, res, next) => {
     if (!title || !description)
       return res.status(400).json({ success: false, message: 'title and description are required' });
 
+    // Enforce Plan Limits
+    const plan = req.user.subscription?.plan || 'free';
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    
+    if (plan !== 'company_pro') {
+      const postsThisMonth = await Job.countDocuments({
+        postedByCompany: req.user._id,
+        createdAt: { $gte: firstDayOfMonth }
+      });
+      
+      const limit = plan === 'company_basic' ? 5 : 1;
+      if (postsThisMonth >= limit) {
+        return res.status(403).json({ 
+          success: false, 
+          message: `Your ${plan === 'company_basic' ? 'Basic' : 'Free'} plan allows ${limit} job post${limit===1?'':'s'} per month. Please upgrade your plan to post more.` 
+        });
+      }
+    }
+
     const companyName = req.user.companyProfile?.companyName || req.user.name;
     const companyLogo = req.user.companyProfile?.logo || req.user.avatar || '';
 

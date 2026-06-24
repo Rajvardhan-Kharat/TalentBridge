@@ -102,7 +102,7 @@ export default function PricingPage() {
     setLoading(planId);
     try {
       const { data } = await api.post('/subscription/create-order', { planId });
-      setShowDemo({ planId, orderId: data.order.id, plan: PLANS.find(p => p.id === planId) });
+      setShowDemo({ planId, orderId: data.order.id, plan: displayPlans.find(p => p.id === planId) });
     } catch { toast.error('Could not initiate payment'); }
     finally { setLoading(null); }
   };

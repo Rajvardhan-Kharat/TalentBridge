@@ -178,6 +178,12 @@ const userSchema = new mongoose.Schema({
     priorityRoles: [String],
   },
 
+  // ── Usage Tracking for Limits ──────────────────────────────────────────────
+  usageStats: {
+    lastAiSearchDate: { type: Date, default: null },
+    aiSearchesToday: { type: Number, default: 0 },
+  },
+
   savedJobs: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Job' }],
 }, { timestamps: true });
 

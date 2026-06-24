@@ -14,6 +14,23 @@ exports.getApplications = async (req, res, next) => {
 // @POST /api/applications
 exports.createApplication = async (req, res, next) => {
   try {
+    // Enforce Plan Limits for Job Seekers
+    const plan = req.user.subscription?.plan || 'free';
+    if (plan === 'free') {
+      const now = new Date();
+      const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const appsThisMonth = await Application.countDocuments({
+        user: req.user._id,
+        createdAt: { $gte: firstDayOfMonth }
+      });
+      if (appsThisMonth >= 5) {
+        return res.status(403).json({
+          success: false,
+          message: 'Your Free plan allows 5 applications per month. Please upgrade your plan to apply for more jobs.'
+        });
+      }
+    }
+
     const app = await Application.create({ ...req.body, user: req.user._id });
     res.status(201).json({ success: true, application: app });
   } catch (err) { next(err); }

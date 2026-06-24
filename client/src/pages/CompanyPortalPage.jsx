@@ -195,7 +195,22 @@ export default function CompanyPortalPage() {
             {jobs.length} active job{jobs.length !== 1 ? 's' : ''} posted · Visible to thousands of job seekers
           </p>
         </div>
-        <button className="btn-primary" onClick={() => { setEditingJob(null); setShowModal(true); }}>
+        <button className="btn-primary" onClick={() => {
+          const plan = user?.subscription?.plan || 'free';
+          const now = new Date();
+          const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+          const jobsThisMonth = jobs.filter(j => new Date(j.createdAt) >= firstDayOfMonth).length;
+          
+          let limit = 1;
+          if (plan === 'company_basic') limit = 5;
+          if (plan === 'company_pro') limit = Infinity;
+          
+          if (jobsThisMonth >= limit) {
+            toast.error(`Your plan limit of ${limit} job${limit===1?'':'s'} this month is reached. Please upgrade to post more.`);
+          } else {
+            setEditingJob(null); setShowModal(true);
+          }
+        }}>
           <Plus size={15} /> Post a Job
         </button>
       </div>
