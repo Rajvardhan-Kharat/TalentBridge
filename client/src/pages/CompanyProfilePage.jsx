@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
-import { Edit2, Save, X, Camera, Building, Globe, MapPin, Users } from 'lucide-react';
+import { Edit2, Save, X, Camera, Building, Globe, MapPin, Users, Crown } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const COMPANY_SIZES = ['1-10', '11-50', '51-200', '201-500', '500+'];
@@ -9,6 +10,7 @@ const COMPANY_SIZES = ['1-10', '11-50', '51-200', '201-500', '500+'];
 export default function CompanyProfilePage() {
   const { user, updateUser } = useAuth();
   const fileRef = useRef();
+  const navigate = useNavigate();
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -127,6 +129,12 @@ export default function CompanyProfilePage() {
               {profileData.size && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Users size={14} /> {profileData.size} employees</span>}
               {profileData.website && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Globe size={14} /> <a href={profileData.website} target="_blank" rel="noreferrer" style={{ color: '#3b82f6', textDecoration: 'none' }}>Website</a></span>}
             </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <button className="btn-primary" style={{ fontSize: 12, padding: '8px 16px', background: '#3b82f6' }} onClick={() => navigate('/pricing')}>
+              <Crown size={13} /> Upgrade Plan
+            </button>
           </div>
         </div>
       </div>

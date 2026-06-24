@@ -30,12 +30,15 @@ const seekerBottomItems = [
 const companyNavItems = [
   { to: '/company-portal', icon: Building, label: 'My Job Postings', sub: 'Manage listings' },
   { to: '/profile',        icon: User,     label: 'Company Profile', sub: 'Edit details' },
+  { to: '/pricing',        icon: Crown,    label: 'Plans & Billing', sub: 'Upgrade / manage' },
 ];
 
 const PLAN_META = {
-  free:     { label: 'Free',     badge: '🆓', color: '#64748b', gradient: 'linear-gradient(135deg,#475569,#64748b)' },
-  gold:     { label: 'Gold',     badge: '⭐', color: '#f59e0b', gradient: 'linear-gradient(135deg,#d97706,#f59e0b)' },
-  platinum: { label: 'Platinum', badge: '💎', color: '#8b5cf6', gradient: 'linear-gradient(135deg,#6d28d9,#8b5cf6)' },
+  free:          { label: 'Free',          badge: '🆓', color: '#64748b', gradient: 'linear-gradient(135deg,#475569,#64748b)' },
+  gold:          { label: 'Gold',          badge: '⭐', color: '#f59e0b', gradient: 'linear-gradient(135deg,#d97706,#f59e0b)' },
+  platinum:      { label: 'Platinum',      badge: '💎', color: '#8b5cf6', gradient: 'linear-gradient(135deg,#6d28d9,#8b5cf6)' },
+  company_basic: { label: 'Company Basic', badge: '🏢', color: '#3b82f6', gradient: 'linear-gradient(135deg,#2563eb,#3b82f6)' },
+  company_pro:   { label: 'Company Pro',   badge: '🚀', color: '#10b981', gradient: 'linear-gradient(135deg,#059669,#10b981)' },
 };
 
 function PlanAvatarSmall({ plan = 'free', avatar, name }) {
