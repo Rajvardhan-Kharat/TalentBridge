@@ -21,46 +21,71 @@ const navItems = [
   { to: '/story-bank',     icon: BookOpen,        label: 'Story Bank',       sub: 'STAR Stories' },
 ];
 
+// Job seeker bottom links (profile + pricing)
+const seekerBottomItems = [
+  { to: '/profile', icon: User,  label: 'My Profile',    sub: 'Edit & view profile' },
+  { to: '/pricing', icon: Crown, label: 'Plans & Billing', sub: 'Upgrade / manage' },
+];
+
 const companyNavItems = [
-  { to: '/company-portal', icon: Building,        label: 'My Job Postings',  sub: 'Manage listings' },
-  { to: '/profile',        icon: User,            label: 'Company Profile',  sub: 'Edit details' },
+  { to: '/company-portal', icon: Building, label: 'My Job Postings', sub: 'Manage listings' },
+  { to: '/profile',        icon: User,     label: 'Company Profile', sub: 'Edit details' },
 ];
 
 const PLAN_META = {
-  free:     { label:'Free',     badge:'🆓', color:'#64748b', gradient:'linear-gradient(135deg,#475569,#64748b)' },
-  gold:     { label:'Gold',     badge:'⭐', color:'#f59e0b', gradient:'linear-gradient(135deg,#d97706,#f59e0b)' },
-  platinum: { label:'Platinum', badge:'💎', color:'#8b5cf6', gradient:'linear-gradient(135deg,#6d28d9,#8b5cf6)' },
+  free:     { label: 'Free',     badge: '🆓', color: '#64748b', gradient: 'linear-gradient(135deg,#475569,#64748b)' },
+  gold:     { label: 'Gold',     badge: '⭐', color: '#f59e0b', gradient: 'linear-gradient(135deg,#d97706,#f59e0b)' },
+  platinum: { label: 'Platinum', badge: '💎', color: '#8b5cf6', gradient: 'linear-gradient(135deg,#6d28d9,#8b5cf6)' },
 };
 
-function PlanAvatarSmall({ plan='free', avatar, name }) {
+function PlanAvatarSmall({ plan = 'free', avatar, name }) {
   const size = 34;
-  const initials = (name||'U').charAt(0).toUpperCase();
+  const initials = (name || 'U').charAt(0).toUpperCase();
   return (
-    <div style={{ position:'relative', width:size, height:size, flexShrink:0 }}>
+    <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
       {plan === 'gold' && (
-        <div style={{ position:'absolute', inset:-2, borderRadius:'50%', background:'conic-gradient(#d97706,#fbbf24,#f59e0b,#d97706)', animation:'spin 3s linear infinite' }} />
+        <div style={{ position: 'absolute', inset: -2, borderRadius: '50%', background: 'conic-gradient(#d97706,#fbbf24,#f59e0b,#d97706)', animation: 'spin 3s linear infinite' }} />
       )}
       {plan === 'platinum' && (
-        <div style={{ position:'absolute', inset:-3, borderRadius:'50%', background:'conic-gradient(#6d28d9,#a78bfa,#c4b5fd,#8b5cf6,#6d28d9)', animation:'spin 2s linear infinite', boxShadow:'0 0 10px rgba(139,92,246,0.7)' }} />
+        <div style={{ position: 'absolute', inset: -3, borderRadius: '50%', background: 'conic-gradient(#6d28d9,#a78bfa,#c4b5fd,#8b5cf6,#6d28d9)', animation: 'spin 2s linear infinite', boxShadow: '0 0 10px rgba(139,92,246,0.7)' }} />
       )}
-      <div style={{ position:'absolute', inset: plan!=='free'?2:0, borderRadius:'50%', background:'linear-gradient(135deg,#6366f1,#06b6d4)', display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden', border:plan==='free'?'2px solid var(--border)':'none' }}>
+      <div style={{ position: 'absolute', inset: plan !== 'free' ? 2 : 0, borderRadius: '50%', background: 'linear-gradient(135deg,#6366f1,#06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: plan === 'free' ? '2px solid var(--border)' : 'none' }}>
         {avatar
-          ? <img src={avatar} alt={name} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
-          : <span style={{ fontSize:13, fontWeight:700, color:'white' }}>{initials}</span>}
+          ? <img src={avatar} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          : <span style={{ fontSize: 13, fontWeight: 700, color: 'white' }}>{initials}</span>}
       </div>
     </div>
+  );
+}
+
+function NavItem({ to, icon: Icon, label, sub, end }) {
+  return (
+    <NavLink key={to} to={to} end={end} style={{ textDecoration: 'none' }}>
+      {({ isActive }) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 10, marginBottom: 2, background: isActive ? 'rgba(99,102,241,0.12)' : 'transparent', border: isActive ? '1px solid rgba(99,102,241,0.2)' : '1px solid transparent', transition: 'all 0.2s', cursor: 'pointer' }}>
+          <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, background: isActive ? 'rgba(99,102,241,0.2)' : 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Icon size={15} color={isActive ? '#818cf8' : 'var(--text-muted)'} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: isActive ? '#818cf8' : 'var(--text-primary)' }}>{label}</div>
+            <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 1 }}>{sub}</div>
+          </div>
+          {isActive && <ChevronRight size={13} color="#818cf8" />}
+        </div>
+      )}
+    </NavLink>
   );
 }
 
 export default function Layout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const plan = user?.subscription?.plan || 'free';
-  const pm = PLAN_META[plan];
   const isCompany = user?.role === 'company';
-  const isAdmin = user?.role === 'admin';
-  const activeNav = isCompany ? companyNavItems : navItems;
-  
+  const isJobseeker = user?.role === 'jobseeker';
+
+  const plan = user?.subscription?.plan || 'free';
+  const pm = PLAN_META[plan] || PLAN_META.free;
+
   const [isDark, setIsDark] = useState(() => {
     const saved = localStorage.getItem('hi_theme');
     return saved ? saved === 'dark' : true;
@@ -73,152 +98,124 @@ export default function Layout() {
 
   const handleLogout = () => { logout(); navigate('/login'); };
 
+  // Select nav items by role
+  const activeNav = isCompany ? companyNavItems : navItems;
+
+  // Profile strength — only for job seekers
+  const profileStrengthBlock = (() => {
+    if (!isJobseeker) return null;
+    const p = user?.profile || {};
+    const checks = [
+      { label: 'Photo', done: !!user?.avatar },
+      { label: 'Skills', done: (p.skills?.length || 0) >= 3 },
+      { label: 'Target Role', done: (p.targetRoles?.length || 0) > 0 },
+      { label: 'Experience', done: !!p.experience },
+      { label: 'Education', done: (p.education?.length || 0) > 0 },
+      { label: 'Summary', done: !!p.bio },
+    ];
+    const score = Math.round((checks.filter(c => c.done).length / checks.length) * 100);
+    if (score === 100) return null;
+    const color = score >= 80 ? '#10b981' : score >= 50 ? '#f59e0b' : '#6366f1';
+    return (
+      <div style={{ padding: '10px', borderTop: '1px solid var(--border)' }}>
+        <NavLink to="/profile" style={{ textDecoration: 'none', display: 'block', padding: '10px', background: 'var(--bg-elevated)', borderRadius: 10, border: `1px solid ${color}33`, cursor: 'pointer' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color }}>Profile Strength</span>
+            <span style={{ fontSize: 11, fontWeight: 800, color }}>{score}%</span>
+          </div>
+          <div style={{ height: 5, background: 'var(--bg-surface)', borderRadius: 3, overflow: 'hidden', marginBottom: 8 }}>
+            <div style={{ height: '100%', width: `${score}%`, background: `linear-gradient(90deg, ${color}, ${color}cc)`, borderRadius: 3, transition: 'width 0.6s ease' }} />
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+            {checks.filter(c => !c.done).slice(0, 3).map(c => (
+              <span key={c.label} style={{ fontSize: 9, padding: '2px 6px', borderRadius: 20, background: `${color}18`, color, fontWeight: 600 }}>+ {c.label}</span>
+            ))}
+          </div>
+        </NavLink>
+      </div>
+    );
+  })();
+
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-      {/* Sidebar */}
+
+      {/* ── Sidebar ── */}
       <aside style={{ width: 260, background: 'var(--bg-surface)', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', flexShrink: 0, overflow: 'hidden' }}>
-        {/* Brand */}
+
+        {/* Brand + plan banner */}
         <div style={{ padding: '18px 18px 14px', borderBottom: '1px solid var(--border)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom:10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
             <div style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Sparkles size={17} color="white" />
             </div>
             <div>
               <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontWeight: 800, fontSize: 15, color: '#f1f5f9' }}>TalentBridge</div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>Smart Talent Platform · All Sectors</div>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+                {isCompany ? 'Company Portal' : 'Smart Talent Platform · All Sectors'}
+              </div>
             </div>
           </div>
-          {/* Upgrade banner for free users */}
-          {plan === 'free' && (
-            <NavLink to="/pricing" style={{ textDecoration:'none', display:'block' }}>
-              <div style={{ background:'linear-gradient(135deg,rgba(99,102,241,0.15),rgba(139,92,246,0.1))', border:'1px solid rgba(99,102,241,0.2)', borderRadius:8, padding:'6px 10px', display:'flex', alignItems:'center', gap:6, cursor:'pointer' }}>
+
+          {/* Upgrade banner — job seekers only */}
+          {isJobseeker && plan === 'free' && (
+            <NavLink to="/pricing" style={{ textDecoration: 'none', display: 'block' }}>
+              <div style={{ background: 'linear-gradient(135deg,rgba(99,102,241,0.15),rgba(139,92,246,0.1))', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 8, padding: '6px 10px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
                 <Crown size={12} color="#818cf8" />
-                <span style={{ fontSize:11, color:'#818cf8', fontWeight:600 }}>Upgrade to Gold/Platinum →</span>
+                <span style={{ fontSize: 11, color: '#818cf8', fontWeight: 600 }}>Upgrade to Gold/Platinum →</span>
               </div>
             </NavLink>
           )}
-          {plan !== 'free' && (
-            <NavLink to="/pricing" style={{ textDecoration:'none', display:'block' }}>
-              <div style={{ background:`linear-gradient(135deg,${pm.color}22,${pm.color}11)`, border:`1px solid ${pm.color}33`, borderRadius:8, padding:'5px 10px', display:'flex', alignItems:'center', gap:6 }}>
-                <span style={{ fontSize:11 }}>{pm.badge}</span>
-                <span style={{ fontSize:11, color:pm.color, fontWeight:600 }}>{pm.label} Member</span>
+          {isJobseeker && plan !== 'free' && (
+            <NavLink to="/pricing" style={{ textDecoration: 'none', display: 'block' }}>
+              <div style={{ background: `linear-gradient(135deg,${pm.color}22,${pm.color}11)`, border: `1px solid ${pm.color}33`, borderRadius: 8, padding: '5px 10px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 11 }}>{pm.badge}</span>
+                <span style={{ fontSize: 11, color: pm.color, fontWeight: 600 }}>{pm.label} Member</span>
               </div>
             </NavLink>
+          )}
+          {/* Company role badge */}
+          {isCompany && (
+            <div style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 8, padding: '5px 10px', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Building size={12} color="#3b82f6" />
+              <span style={{ fontSize: 11, color: '#3b82f6', fontWeight: 600 }}>Company Account</span>
+            </div>
           )}
         </div>
 
-        {/* Nav */}
+        {/* Nav items */}
         <nav style={{ flex: 1, overflowY: 'auto', padding: '10px' }}>
-          {activeNav.map(({ to, icon: Icon, label, sub }) => (
-            <NavLink key={to} to={to} end={to === '/'} style={{ textDecoration: 'none' }}>
-              {({ isActive }) => (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 10, marginBottom: 2, background: isActive ? 'rgba(99,102,241,0.12)' : 'transparent', border: isActive ? '1px solid rgba(99,102,241,0.2)' : '1px solid transparent', transition: 'all 0.2s', cursor: 'pointer' }}>
-                  <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, background: isActive ? 'rgba(99,102,241,0.2)' : 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Icon size={15} color={isActive ? '#818cf8' : 'var(--text-muted)'} />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: isActive ? '#818cf8' : 'var(--text-primary)' }}>{label}</div>
-                    <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 1 }}>{sub}</div>
-                  </div>
-                  {isActive && <ChevronRight size={13} color="#818cf8" />}
-                </div>
-              )}
-            </NavLink>
+          {activeNav.map(({ to, icon, label, sub }) => (
+            <NavItem key={to} to={to} icon={icon} label={label} sub={sub} end={to === '/'} />
           ))}
 
-          {/* Divider */}
-          <div style={{ borderTop:'1px solid var(--border)', margin:'8px 0' }} />
+          {/* Divider + Profile — job seekers only get Plans & Billing */}
+          <div style={{ borderTop: '1px solid var(--border)', margin: '8px 0' }} />
 
-          {/* Profile & Pricing */}
-          {[
-            { to:'/profile', icon:User, label:'My Profile', sub:'Edit & view profile' },
-            { to:'/pricing', icon:Crown, label:'Plans & Billing', sub:'Upgrade / manage' },
-          ].map(({ to, icon: Icon, label, sub }) => (
-            <NavLink key={to} to={to} style={{ textDecoration: 'none' }}>
-              {({ isActive }) => (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 10, marginBottom: 2, background: isActive ? 'rgba(99,102,241,0.12)' : 'transparent', border: isActive ? '1px solid rgba(99,102,241,0.2)' : '1px solid transparent', transition: 'all 0.2s', cursor: 'pointer' }}>
-                  <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, background: isActive ? 'rgba(99,102,241,0.2)' : 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Icon size={15} color={isActive ? '#818cf8' : 'var(--text-muted)'} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: isActive ? '#818cf8' : 'var(--text-primary)' }}>{label}</div>
-                    <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{sub}</div>
-                  </div>
-                </div>
-              )}
-            </NavLink>
+          {isJobseeker && seekerBottomItems.map(({ to, icon, label, sub }) => (
+            <NavItem key={to} to={to} icon={icon} label={label} sub={sub} />
           ))}
+
+          {/* Company only gets profile (already in companyNavItems, so no duplicate needed) */}
         </nav>
 
-        {/* Admin Dashboard Link — only for admins */}
-        {isAdmin && (
-          <div style={{ padding: '0 10px 6px' }}>
-            <NavLink to="/admin" style={{ textDecoration: 'none' }}>
-              {({ isActive }) => (
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px',
-                  borderRadius: 10, marginBottom: 2,
-                  background: isActive ? 'rgba(239,68,68,0.12)' : 'rgba(239,68,68,0.06)',
-                  border: isActive ? '1px solid rgba(239,68,68,0.3)' : '1px solid rgba(239,68,68,0.15)',
-                  transition: 'all 0.2s', cursor: 'pointer',
-                }}>
-                  <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, background: 'rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Shield size={15} color="#ef4444" />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: '#ef4444' }}>Admin Dashboard</div>
-                    <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>Platform monitoring</div>
-                  </div>
-                </div>
-              )}
-            </NavLink>
-          </div>
-        )}
+        {/* Profile Strength — job seekers only */}
+        {profileStrengthBlock}
 
-        {/* Profile Strength Meter */}
-        {(() => {
-          const p = user?.profile || {};
-          const checks = [
-            { label: 'Photo', done: !!user?.avatar },
-            { label: 'Skills', done: (p.skills?.length || 0) >= 3 },
-            { label: 'Target Role', done: (p.targetRoles?.length || 0) > 0 },
-            { label: 'Experience', done: !!p.experience },
-            { label: 'Education', done: !!p.education },
-            { label: 'Summary', done: !!p.bio },
-          ];
-          const score = Math.round((checks.filter(c => c.done).length / checks.length) * 100);
-          const color = score >= 80 ? '#10b981' : score >= 50 ? '#f59e0b' : '#6366f1';
-          if (score === 100) return null;
-          return (
-            <div style={{ padding: '10px', borderTop: '1px solid var(--border)' }}>
-              <NavLink to="/profile" style={{ textDecoration: 'none', display: 'block', padding: '10px', background: 'var(--bg-elevated)', borderRadius: 10, border: `1px solid ${color}33`, cursor: 'pointer' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color }}>Profile Strength</span>
-                  <span style={{ fontSize: 11, fontWeight: 800, color }}>{score}%</span>
-                </div>
-                <div style={{ height: 5, background: 'var(--bg-surface)', borderRadius: 3, overflow: 'hidden', marginBottom: 8 }}>
-                  <div style={{ height: '100%', width: `${score}%`, background: `linear-gradient(90deg, ${color}, ${color}cc)`, borderRadius: 3, transition: 'width 0.6s ease' }} />
-                </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                  {checks.filter(c => !c.done).slice(0, 3).map(c => (
-                    <span key={c.label} style={{ fontSize: 9, padding: '2px 6px', borderRadius: 20, background: `${color}18`, color, fontWeight: 600 }}>+ {c.label}</span>
-                  ))}
-                </div>
-              </NavLink>
-            </div>
-          );
-        })()}
-
-        {/* User Footer */}
+        {/* User footer */}
         <div style={{ borderTop: '1px solid var(--border)', padding: '10px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10, background: 'var(--bg-elevated)' }}>
-            <PlanAvatarSmall plan={plan} avatar={user?.avatar} name={user?.name} />
+            <PlanAvatarSmall plan={isJobseeker ? plan : 'free'} avatar={user?.avatar} name={user?.name} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name}</div>
-              <div style={{ fontSize: 10, color: pm.color, fontWeight: 600 }}>{pm.badge} {pm.label}</div>
+              {isJobseeker && (
+                <div style={{ fontSize: 10, color: pm.color, fontWeight: 600 }}>{pm.badge} {pm.label}</div>
+              )}
+              {isCompany && (
+                <div style={{ fontSize: 10, color: '#3b82f6', fontWeight: 600 }}>🏢 Company</div>
+              )}
             </div>
-            <button onClick={() => setIsDark(!isDark)} className="btn-ghost" style={{ padding: '5px', color: isDark ? 'var(--text-muted)' : '#f59e0b' }}>
+            <button onClick={() => setIsDark(d => !d)} className="btn-ghost" style={{ padding: '5px', color: isDark ? 'var(--text-muted)' : '#f59e0b' }}>
               {isDark ? <Sun size={13} /> : <Moon size={13} />}
             </button>
             <button onClick={handleLogout} className="btn-ghost" style={{ padding: '5px' }}><LogOut size={13} /></button>
@@ -226,7 +223,7 @@ export default function Layout() {
         </div>
       </aside>
 
-      {/* Main */}
+      {/* Main content */}
       <main style={{ flex: 1, overflowY: 'auto', background: 'var(--bg-base)' }}>
         <Outlet />
       </main>

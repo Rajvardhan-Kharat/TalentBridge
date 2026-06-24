@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
-import { Check, Zap, Crown, Sparkles, X } from 'lucide-react';
+import { Check, Crown, Sparkles, X, Building2, Shield } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 const PLANS = [
   {
@@ -48,9 +49,43 @@ function PlanFrame({ plan, size = 60 }) {
 
 export default function PricingPage() {
   const { user, updateUser } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(null);
   const [showDemo, setShowDemo] = useState(null);
   const currentPlan = user?.subscription?.plan || 'free';
+
+  // Company and Admin users should not see job-seeker plans
+  if (user?.role === 'company') {
+    return (
+      <div style={{ padding: '60px 32px', maxWidth: 600, margin: '0 auto', textAlign: 'center' }}>
+        <div style={{ fontSize: 56, marginBottom: 20 }}>🏢</div>
+        <h1 style={{ fontSize: 26, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 12 }}>Company Account</h1>
+        <p style={{ color: 'var(--text-muted)', fontSize: 15, marginBottom: 24 }}>
+          Subscription plans shown here are for job seekers only.<br />
+          Company billing is managed separately.
+        </p>
+        <button onClick={() => navigate('/company-portal')} className="btn-primary" style={{ justifyContent: 'center' }}>
+          <Building2 size={16} /> Go to Company Portal
+        </button>
+      </div>
+    );
+  }
+
+  if (user?.role === 'admin') {
+    return (
+      <div style={{ padding: '60px 32px', maxWidth: 600, margin: '0 auto', textAlign: 'center' }}>
+        <div style={{ fontSize: 56, marginBottom: 20 }}>🛡️</div>
+        <h1 style={{ fontSize: 26, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 12 }}>Admin Account</h1>
+        <p style={{ color: 'var(--text-muted)', fontSize: 15, marginBottom: 24 }}>
+          Admins do not have subscription plans.<br />
+          Manage user subscriptions from the Admin Dashboard.
+        </p>
+        <button onClick={() => navigate('/admin')} className="btn-primary" style={{ justifyContent: 'center' }}>
+          <Shield size={16} /> Go to Admin Dashboard
+        </button>
+      </div>
+    );
+  }
 
   const handleUpgrade = async (planId) => {
     if (planId === 'free') return;

@@ -34,8 +34,10 @@ const PrivateRoute = ({ children }) => {
 
 const OnboardingGuard = ({ children }) => {
   const { user } = useAuth();
-  // Companies and admins skip onboarding
-  if (user && (user.role === 'company' || user.role === 'admin')) return children;
+  // Admins must go to their own dashboard
+  if (user && user.role === 'admin') return <Navigate to="/admin" replace />;
+  // Companies skip onboarding
+  if (user && user.role === 'company') return children;
   if (user && !user.onboardingComplete) return <Navigate to="/onboarding" replace />;
   return children;
 };
@@ -59,6 +61,23 @@ const AdminRoute = ({ children }) => {
   return children;
 };
 
+// Blocks company and admin users from job-seeker-only pages
+const JobseekerRoute = ({ children }) => {
+  const { user } = useAuth();
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role === 'company') return <Navigate to="/company-portal" replace />;
+  if (user.role === 'admin') return <Navigate to="/admin" replace />;
+  return children;
+};
+
+// Index route: sends each role to the right home page
+const RoleIndexRedirect = () => {
+  const { user } = useAuth();
+  if (user?.role === 'company') return <Navigate to="/company-portal" replace />;
+  if (user?.role === 'admin') return <Navigate to="/admin" replace />;
+  return <DashboardPage />;
+};
+
 export default function App() {
   const { user } = useAuth();
   return (
@@ -75,22 +94,22 @@ export default function App() {
       {/* Public resume page — no login required */}
       <Route path="/resume/:userId"   element={<PublicResumePage />} />
 
-      {/* Main app — job seekers */}
+      {/* Main app — job seekers + company (company gets redirected from / to /company-portal) */}
       <Route path="/" element={<PrivateRoute><OnboardingGuard><Layout /></OnboardingGuard></PrivateRoute>}>
-        <Route index                    element={<DashboardPage />} />
-        <Route path="jobs"              element={<JobDiscoveryPage />} />
-        <Route path="evaluator"         element={<JobEvaluatorPage />} />
-        <Route path="cv-tailor"         element={<CvTailoringPage />} />
-        <Route path="toolkit"           element={<PromptToolkitPage />} />
-        <Route path="portal-scanner"    element={<PortalScannerPage />} />
-        <Route path="tracker"           element={<ApplicationTrackerPage />} />
-        <Route path="story-bank"        element={<StoryBankPage />} />
+        <Route index                    element={<RoleIndexRedirect />} />
+        <Route path="jobs"              element={<JobseekerRoute><JobDiscoveryPage /></JobseekerRoute>} />
+        <Route path="evaluator"         element={<JobseekerRoute><JobEvaluatorPage /></JobseekerRoute>} />
+        <Route path="cv-tailor"         element={<JobseekerRoute><CvTailoringPage /></JobseekerRoute>} />
+        <Route path="toolkit"           element={<JobseekerRoute><PromptToolkitPage /></JobseekerRoute>} />
+        <Route path="portal-scanner"    element={<JobseekerRoute><PortalScannerPage /></JobseekerRoute>} />
+        <Route path="tracker"           element={<JobseekerRoute><ApplicationTrackerPage /></JobseekerRoute>} />
+        <Route path="story-bank"        element={<JobseekerRoute><StoryBankPage /></JobseekerRoute>} />
         <Route path="profile"           element={<ProfilePage />} />
         <Route path="pricing"           element={<PricingPage />} />
-        <Route path="resume"            element={<ResumeBuilderPage />} />
-        <Route path="learning-roadmap"  element={<LearningRoadmapPage />} />
-        <Route path="skill-evaluator"   element={<SkillEvaluatorPage />} />
-        {/* Company portal nested inside Layout so nav works */}
+        <Route path="resume"            element={<JobseekerRoute><ResumeBuilderPage /></JobseekerRoute>} />
+        <Route path="learning-roadmap"  element={<JobseekerRoute><LearningRoadmapPage /></JobseekerRoute>} />
+        <Route path="skill-evaluator"   element={<JobseekerRoute><SkillEvaluatorPage /></JobseekerRoute>} />
+        {/* Company portal */}
         <Route path="company-portal"    element={<CompanyRoute><CompanyPortalPage /></CompanyRoute>} />
       </Route>
 
