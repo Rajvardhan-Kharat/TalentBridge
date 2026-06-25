@@ -184,18 +184,25 @@ const fetchAndStoreJobs = async () => {
       try {
         await Job.updateOne(
           { title: job.title, company: job.company, sourcePortal: job.sourcePortal },
-          { $setOnInsert: job },
+          { 
+            $setOnInsert: job,
+            $set: { lastSeenAt: new Date(), isActive: true }
+          },
           { upsert: true }
         );
         inserted++;
       } catch (e) { /* skip dupe */ }
     }
 
-    // Auto-clean jobs older than 30 days (company-posted jobs are exempt)
+    // Auto-clean jobs not seen in the last 2 days (i.e. they were removed from the API)
+    // Company-posted jobs are exempt from this automated clean
     const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - 30);
+    cutoff.setDate(cutoff.getDate() - 2);
     const deleted = await Job.deleteMany({
-      createdAt: { $lt: cutoff },
+      $or: [
+        { lastSeenAt: { $lt: cutoff } },
+        { lastSeenAt: { $exists: false }, createdAt: { $lt: cutoff } } // fallback for old records
+      ],
       postedByCompany: { $exists: false }, // don't delete company-posted jobs
     });
 
