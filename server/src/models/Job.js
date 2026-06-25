@@ -23,6 +23,7 @@ const jobSchema = new mongoose.Schema({
   closingDate: Date,
   postedByCompany: { type: require('mongoose').Schema.Types.ObjectId, ref: 'User', default: null },
   lastSeenAt: { type: Date, default: Date.now },
+  isCustomScraped: { type: Boolean, default: false },
 
   // AI-computed fields
   inDemandSkills: [String],

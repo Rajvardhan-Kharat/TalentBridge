@@ -48,7 +48,8 @@ const scrapeHackerNewsJobs = async () => {
         sourcePortal: 'We Work Remotely',
         isActive: true,
         postedAt: pubDate ? new Date(pubDate) : new Date(),
-        currency: 'USD'
+        currency: 'USD',
+        isCustomScraped: true
       });
     });
 

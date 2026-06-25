@@ -36,7 +36,7 @@ exports.getJobs = async (req, res, next) => {
     }
 
     const skip = (Number(page) - 1) * Number(limit);
-    let jobs = await Job.find(query).sort({ postedAt: -1 }).skip(skip).limit(Number(limit));
+    let jobs = await Job.find(query).sort({ isCustomScraped: -1, postedAt: -1 }).skip(skip).limit(Number(limit));
 
     // Compute match scores if user is logged in
     const userSkills = req.user?.profile?.skills || [];
