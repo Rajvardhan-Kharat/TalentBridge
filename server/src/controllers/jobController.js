@@ -6,12 +6,25 @@ exports.getJobs = async (req, res, next) => {
   try {
     const {
       q, location, locationType, jobType, salaryMin, salaryMax,
-      skills, industry, minMatch, page = 1, limit = 20
+      skills, industry, minMatch, country, page = 1, limit = 20
     } = req.query;
 
     const query = { isActive: true };
     if (q) query.$text = { $search: q };
-    if (location) query.location = { $regex: location, $options: 'i' };
+    
+    // Country and location filtering logic
+    const indianLocationsRegex = /India|Bengaluru|Bangalore|Mumbai|Delhi|Hyderabad|Pune|Chennai|Kolkata|Gurgaon|Noida|Ahmedabad|Surat|Jaipur|Lucknow|Chandigarh|Haryana|Karnataka|Maharashtra|Telangana|Tamil Nadu|Gujarat|Uttar Pradesh|Punjab|Rajasthan/i;
+    
+    if (country === 'in') {
+      if (location) query.location = { $regex: location, $options: 'i' };
+      else query.location = { $regex: indianLocationsRegex };
+    } else if (country === 'global') {
+      if (location) query.location = { $regex: location, $options: 'i' };
+      else query.location = { $not: indianLocationsRegex };
+    } else {
+      if (location) query.location = { $regex: location, $options: 'i' };
+    }
+
     if (locationType) query.locationType = locationType;
     if (jobType) query.jobType = jobType;
     if (industry) query.industry = { $regex: industry, $options: 'i' };
