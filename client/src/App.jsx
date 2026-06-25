@@ -22,6 +22,7 @@ import CompanyRegisterPage from './pages/CompanyRegisterPage';
 import CompanyProfilePage from './pages/CompanyProfilePage';
 import PublicResumePage from './pages/PublicResumePage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
+import CareerPortalSelector from './pages/CareerPortalSelector';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -98,6 +99,9 @@ export default function App() {
 
       {/* Admin dashboard — standalone page, no Layout sidebar */}
       <Route path="/admin" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
+
+      {/* Career Portal Selector — accessible while logged in (no layout) */}
+      <Route path="/career-selector" element={<PrivateRoute><CareerPortalSelector /></PrivateRoute>} />
 
       {/* Public resume page — no login required */}
       <Route path="/resume/:userId"   element={<PublicResumePage />} />

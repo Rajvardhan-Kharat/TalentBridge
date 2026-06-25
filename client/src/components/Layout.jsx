@@ -4,12 +4,17 @@ import { useState, useEffect } from 'react';
 import {
   LayoutDashboard, Search, Brain, FileText, Wand2,
   Globe, Kanban, BookOpen, LogOut, Sparkles, ChevronRight,
-  User, Crown, Star, FileDown, Moon, Sun, Map, Building, Zap, Shield
+  User, Crown, Star, FileDown, Moon, Sun, Map, Building, Zap, Shield,
+  GraduationCap, TrendingUp, RefreshCw, Flag, Globe2
 } from 'lucide-react';
+import { CAREER_TIERS, useCareerTier } from '../pages/CareerPortalSelector';
 
 const navItems = [
   { to: '/',               icon: LayoutDashboard, label: 'Dashboard',        sub: 'Overview & Insights' },
-  { to: '/jobs',           icon: Search,          label: 'Job Discovery',    sub: 'Find & Match Jobs' },
+  // Talent Acquisition — sub-modules
+  { to: '/jobs',           icon: Flag,            label: 'India Opportunities',  sub: 'Jobs across India', section: 'talent' },
+  { to: '/jobs?module=global', icon: Globe2,      label: 'Global Opportunities', sub: 'International Roles', section: 'talent' },
+  // Other tools
   { to: '/evaluator',      icon: Brain,           label: 'Smart Evaluator',  sub: 'Score Any Job' },
   { to: '/cv-tailor',      icon: FileText,        label: 'CV Tailor',        sub: 'ATS-Optimized CVs' },
   { to: '/resume',         icon: FileDown,        label: 'Resume Builder',   sub: 'PDF + Share Link' },
@@ -89,6 +94,10 @@ export default function Layout() {
   const plan = user?.subscription?.plan || 'free';
   const pm = PLAN_META[plan] || PLAN_META.free;
 
+  // Career Tier
+  const [careerTier, setCareerTier] = useCareerTier();
+  const tierMeta = careerTier ? CAREER_TIERS[careerTier] : null;
+
   const [isDark, setIsDark] = useState(() => {
     const saved = localStorage.getItem('hi_theme');
     return saved ? saved === 'dark' : true;
@@ -152,13 +161,41 @@ export default function Layout() {
             <div style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Sparkles size={17} color="white" />
             </div>
-            <div>
+            <div style={{ flex:1, minWidth:0 }}>
               <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontWeight: 800, fontSize: 15, color: 'var(--text-primary)' }}>TalentBridge</div>
               <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
-                {isCompany ? 'Company Portal' : 'Smart Talent Platform · All Sectors'}
+                {isCompany ? 'Company Portal' : 'Talent Acquisition · All Sectors'}
               </div>
             </div>
           </div>
+
+          {/* Career Tier badge — jobseekers only */}
+          {isJobseeker && (
+            <div
+              onClick={() => navigate('/career-selector')}
+              title="Switch career portal"
+              style={{
+                display:'flex', alignItems:'center', gap:8, padding:'8px 10px',
+                borderRadius:10, cursor:'pointer', marginBottom:8,
+                background: tierMeta ? tierMeta.colorDim : 'var(--bg-elevated)',
+                border: `1px solid ${tierMeta ? tierMeta.colorBorder : 'var(--border)'}`,
+                transition:'all 0.2s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.opacity='0.8'}
+              onMouseLeave={e => e.currentTarget.style.opacity='1'}
+            >
+              <span style={{ fontSize:18 }}>{tierMeta ? tierMeta.emoji : '🎯'}</span>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ fontSize:11, fontWeight:700, color: tierMeta ? tierMeta.color : '#818cf8', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                  {tierMeta ? tierMeta.label : 'Select Career Portal'}
+                </div>
+                <div style={{ fontSize:9, color:'var(--text-muted)', marginTop:1 }}>
+                  {tierMeta ? tierMeta.sub : 'Click to choose your tier'}
+                </div>
+              </div>
+              <RefreshCw size={11} color="var(--text-muted)" />
+            </div>
+          )}
 
           {/* Upgrade banner — job seekers only */}
           {isJobseeker && plan === 'free' && (
@@ -188,7 +225,47 @@ export default function Layout() {
 
         {/* Nav items */}
         <nav style={{ flex: 1, overflowY: 'auto', padding: '10px' }}>
-          {activeNav.map(({ to, icon, label, sub }) => (
+
+          {/* Talent Acquisition section header — jobseeker only */}
+          {!isCompany && (() => {
+            const taItems = activeNav.filter(n => n.section === 'talent');
+            const otherItems = activeNav.filter(n => !n.section);
+            return (
+              <>
+                {/* Non-talent items first (Dashboard) */}
+                {otherItems.slice(0, 1).map(({ to, icon, label, sub }) => (
+                  <NavItem key={to} to={to} icon={icon} label={label} sub={sub} end={to === '/'} />
+                ))}
+
+                {/* Talent Acquisition section */}
+                {taItems.length > 0 && (
+                  <>
+                    <div style={{ padding: '8px 10px 4px', marginTop: 4 }}>
+                      <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                        <div style={{ height:1, flex:1, background:'var(--border)' }} />
+                        <span style={{
+                          fontSize:9, fontWeight:800, letterSpacing:1.2,
+                          color:'#818cf8', whiteSpace:'nowrap', padding:'0 4px',
+                        }}>TALENT ACQUISITION</span>
+                        <div style={{ height:1, flex:1, background:'var(--border)' }} />
+                      </div>
+                    </div>
+                    {taItems.map(({ to, icon, label, sub }) => (
+                      <NavItem key={to} to={to} icon={icon} label={label} sub={sub} />
+                    ))}
+                  </>
+                )}
+
+                {/* Remaining items */}
+                {otherItems.slice(1).map(({ to, icon, label, sub }) => (
+                  <NavItem key={to} to={to} icon={icon} label={label} sub={sub} />
+                ))}
+              </>
+            );
+          })()}
+
+          {/* Company nav */}
+          {isCompany && activeNav.map(({ to, icon, label, sub }) => (
             <NavItem key={to} to={to} icon={icon} label={label} sub={sub} end={to === '/'} />
           ))}
 

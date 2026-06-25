@@ -2,9 +2,13 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { Search, MapPin, Building, DollarSign, ExternalLink, Bookmark, ChevronDown, Sparkles, ShieldCheck } from 'lucide-react';
+import {
+  Search, MapPin, Building, DollarSign, ExternalLink, Bookmark,
+  ChevronDown, Sparkles, ShieldCheck, Globe2, Flag, TrendingUp
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 
+// ── Salary formatter ──────────────────────────────────────────────────────────
 const fmtSalary = (min, max) => {
   const f = n => n >= 100000 ? `₹${(n/100000).toFixed(1)}L` : `₹${n?.toLocaleString()}`;
   if (!min && !max) return 'Salary not disclosed';
@@ -18,6 +22,7 @@ const GradeBadge = ({ grade, score }) => (
   </span>
 );
 
+// ── Job Card ──────────────────────────────────────────────────────────────────
 const JobCard = ({ job, onTrack }) => {
   const [expanded, setExpanded] = useState(false);
   const [checkLoading, setCheckLoading] = useState(false);
@@ -98,7 +103,6 @@ const JobCard = ({ job, onTrack }) => {
                 {job.sourcePortal === 'Adzuna' ? 'View Job' : 'Apply Now'} <ExternalLink size={12} />
               </a>
             )}
-            {/* Fallback: always provide a Google Jobs search link */}
             <a href={`https://www.google.com/search?q=${encodeURIComponent(`${job.title} ${job.company} job`)}+site:linkedin.com+OR+site:naukri.com+OR+site:indeed.co.in`}
               target="_blank" rel="noreferrer noopener"
               style={{ padding:'7px 12px',fontSize:12,textDecoration:'none',color:'var(--text-muted)',border:'1px solid var(--border)',borderRadius:8,display:'flex',alignItems:'center',gap:5,transition:'all 0.2s' }}
@@ -166,8 +170,6 @@ const JobCard = ({ job, onTrack }) => {
                   {readiness.quickWins.slice(0,2).map(w => <div key={w} style={{ fontSize:11,color:'var(--text-muted)',padding:'2px 0' }}>→ {w}</div>)}
                 </div>
               )}
-
-              {/* 📚 Free Course Recommendations */}
               {readiness.recommendedCourses?.length > 0 && (
                 <div style={{ marginTop:12,padding:'10px 12px',background:'rgba(16,185,129,0.05)',borderRadius:10,border:'1px solid rgba(16,185,129,0.15)' }}>
                   <div style={{ fontSize:11,fontWeight:700,color:'#10b981',marginBottom:8,display:'flex',alignItems:'center',gap:5 }}>
@@ -202,28 +204,68 @@ const JobCard = ({ job, onTrack }) => {
               )}
             </div>
           )}
-
         </div>
       </div>
     </div>
   );
 };
 
+// ── Opportunity Module Tabs ────────────────────────────────────────────────────
+const MODULES = [
+  {
+    id: 'india',
+    label: 'Opportunities in India',
+    icon: Flag,
+    flag: '🇮🇳',
+    color: '#f97316',
+    colorDim: 'rgba(249,115,22,0.12)',
+    colorBorder: 'rgba(249,115,22,0.3)',
+    description: 'Jobs across Bengaluru, Mumbai, Delhi, Hyderabad, Pune & more',
+    defaultLocation: '',
+    locationHint: 'e.g. Bengaluru, Mumbai, Delhi...',
+    extraParams: { country: 'in' },
+    boards: ['Naukri', 'LinkedIn India', 'Indeed India', 'TimesJobs', 'Shine'],
+  },
+  {
+    id: 'global',
+    label: 'Global Opportunities',
+    icon: Globe2,
+    flag: '🌐',
+    color: '#06b6d4',
+    colorDim: 'rgba(6,182,212,0.12)',
+    colorBorder: 'rgba(6,182,212,0.3)',
+    description: 'Remote & international roles across USA, UK, UAE, Europe, Singapore & more',
+    defaultLocation: '',
+    locationHint: 'e.g. New York, London, Dubai...',
+    extraParams: { country: 'global' },
+    boards: ['LinkedIn', 'Indeed', 'Glassdoor', 'Adzuna', 'Remote.co'],
+  },
+];
+
+// ── Main Page ─────────────────────────────────────────────────────────────────
 export default function JobDiscoveryPage() {
   const { user } = useAuth();
   const userSkillNames = (user?.profile?.skills || []).map(s => s.name || s);
   const userTargetRoles = user?.profile?.targetRoles || [];
 
-  // Auto-build a smart default query from user's profile
   const defaultQuery = userTargetRoles[0] || userSkillNames.slice(0, 2).join(' ') || '';
   const isPersonalised = !!defaultQuery;
 
-  const [filters, setFilters] = useState({ q: defaultQuery, location: '', locationType: '', jobType: '', minMatch: '' });
-  const [applied, setApplied] = useState({ q: defaultQuery, location: '', locationType: '', jobType: '', minMatch: '' });
+  const [activeModule, setActiveModule] = useState('india');
+  const module = MODULES.find(m => m.id === activeModule);
+
+  const emptyFilters = { q: defaultQuery, location: '', locationType: '', jobType: '', minMatch: '' };
+  const [filters, setFilters] = useState(emptyFilters);
+  const [applied, setApplied] = useState(emptyFilters);
   const [showHigh, setShowHigh] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
-  // Re-init when user profile loads
+  // Reset filters when switching module
+  useEffect(() => {
+    setFilters(f => ({ ...f, location: '' }));
+    setApplied(f => ({ ...f, location: '' }));
+  }, [activeModule]);
+
   useEffect(() => {
     if (user && !hasSearched) {
       const q = userTargetRoles[0] || userSkillNames.slice(0, 2).join(' ') || '';
@@ -233,11 +275,12 @@ export default function JobDiscoveryPage() {
   }, [user?.profile]);
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['jobs', applied],
+    queryKey: ['jobs', applied, activeModule],
     queryFn: () => {
       const params = new URLSearchParams();
       Object.entries(applied).forEach(([k, v]) => { if (v) params.set(k, v); });
       if (showHigh) params.set('minMatch', '4');
+      Object.entries(module.extraParams || {}).forEach(([k, v]) => params.set(k, v));
       return api.get(`/jobs?${params}`).then(r => r.data);
     },
   });
@@ -253,56 +296,138 @@ export default function JobDiscoveryPage() {
   const total = data?.total || 0;
 
   return (
-    <div style={{ padding:'28px 32px', maxWidth:900, margin:'0 auto' }}>
-      {/* Header */}
+    <div style={{ padding:'28px 32px', maxWidth:920, margin:'0 auto' }}>
+
+      {/* ── Page Header ── */}
       <div style={{ marginBottom: 24 }} className="animate-fade-in">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-          <Search size={18} color="#818cf8" />
-          <span style={{ fontSize: 12, color: '#818cf8', fontWeight: 600, letterSpacing: 1 }}>MODULE 1 — JOB DISCOVERY</span>
+        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6 }}>
+          <TrendingUp size={18} color="#818cf8" />
+          <span style={{ fontSize:12, color:'#818cf8', fontWeight:600, letterSpacing:1 }}>TALENT ACQUISITION — OPPORTUNITIES</span>
         </div>
-        <h1 style={{ fontFamily: 'Plus Jakarta Sans', fontSize: 26, fontWeight: 800, marginBottom: 4 }}>Find Your Perfect Job</h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>
+        <h1 style={{ fontFamily:'Plus Jakarta Sans', fontSize:26, fontWeight:800, marginBottom:4 }}>Find Your Perfect Opportunity</h1>
+        <p style={{ color:'var(--text-secondary)', fontSize:14 }}>
           {isPersonalised
-            ? <><Sparkles size={13} style={{ verticalAlign: 'middle', color: '#818cf8' }} /> Showing jobs matched to your profile — {userSkillNames.slice(0, 3).join(', ')}</>
-            : 'Smart skills-based matching — not just keywords'}
+            ? <><Sparkles size={13} style={{ verticalAlign:'middle', color:'#818cf8' }} /> Matched to your profile — {userSkillNames.slice(0,3).join(', ')}</>
+            : 'Skill-based matching across India and Global markets'}
         </p>
       </div>
 
-      {/* Search Bar */}
-      <div className="glass" style={{ padding:'16px',marginBottom:16 }} className="animate-fade-in">
+      {/* ── Module Tab Switcher ── */}
+      <div className="animate-fade-in" style={{
+        display:'flex', gap:0, marginBottom:24,
+        background:'var(--bg-surface)',
+        borderRadius:16, padding:5, border:'1px solid var(--border)',
+      }}>
+        {MODULES.map(mod => {
+          const ModIcon = mod.icon;
+          const isActive = activeModule === mod.id;
+          return (
+            <button
+              key={mod.id}
+              onClick={() => setActiveModule(mod.id)}
+              style={{
+                flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:10,
+                padding:'14px 20px', borderRadius:12, border:'none', cursor:'pointer',
+                transition:'all 0.25s cubic-bezier(0.34,1.56,0.64,1)',
+                background: isActive
+                  ? `linear-gradient(135deg, ${mod.colorDim}, ${mod.colorDim})`
+                  : 'transparent',
+                boxShadow: isActive ? `0 4px 16px ${mod.colorBorder}, inset 0 0 0 1.5px ${mod.colorBorder}` : 'none',
+              }}
+            >
+              <div style={{
+                width:32, height:32, borderRadius:10,
+                background: isActive ? `linear-gradient(135deg, ${mod.color}33, ${mod.color}22)` : 'var(--bg-elevated)',
+                display:'flex', alignItems:'center', justifyContent:'center',
+                border: isActive ? `1px solid ${mod.colorBorder}` : '1px solid var(--border)',
+                transition:'all 0.25s', fontSize:16,
+              }}>
+                {mod.flag}
+              </div>
+              <div style={{ textAlign:'left' }}>
+                <div style={{
+                  fontSize:13, fontWeight:700,
+                  color: isActive ? mod.color : 'var(--text-secondary)',
+                  transition:'color 0.2s',
+                }}>
+                  {mod.label}
+                </div>
+                <div style={{ fontSize:10, color:'var(--text-muted)', marginTop:1 }}>
+                  {mod.description}
+                </div>
+              </div>
+              {isActive && (
+                <div style={{
+                  marginLeft:'auto', width:8, height:8, borderRadius:'50%',
+                  background: mod.color,
+                  boxShadow: `0 0 8px ${mod.color}`,
+                  animation:'pulse-glow 2s infinite',
+                }} />
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ── Job Boards Banner ── */}
+      <div className="animate-fade-in" style={{
+        marginBottom:16, padding:'10px 16px', borderRadius:10,
+        background: `linear-gradient(135deg, ${module.colorDim}, transparent)`,
+        border: `1px solid ${module.colorBorder}`,
+        display:'flex', alignItems:'center', gap:10, flexWrap:'wrap',
+      }}>
+        <span style={{ fontSize:11, color: module.color, fontWeight:700 }}>
+          {module.flag} Sourcing from:
+        </span>
+        {module.boards.map(b => (
+          <span key={b} style={{
+            fontSize:11, padding:'2px 8px', borderRadius:12,
+            background:'rgba(255,255,255,0.05)', color:'var(--text-muted)',
+            border:'1px solid var(--border)',
+          }}>{b}</span>
+        ))}
+      </div>
+
+      {/* ── Search Bar ── */}
+      <div className="glass" style={{ padding:'16px',marginBottom:16 }}>
         <div style={{ display:'flex',gap:10 }}>
           <div style={{ flex:1,position:'relative' }}>
             <Search size={16} color="var(--text-muted)" style={{ position:'absolute',left:12,top:'50%',transform:'translateY(-50%)' }} />
-            <input className="input" placeholder="Search roles, skills, companies..." value={filters.q}
+            <input className="input" placeholder="Search roles, skills, companies..."
+              value={filters.q}
               onChange={e => setFilters(f => ({...f,q:e.target.value}))}
-              onKeyDown={e => e.key==='Enter' && setApplied(filters)}
+              onKeyDown={e => e.key==='Enter' && (setApplied(filters), setHasSearched(true))}
               style={{ paddingLeft:36 }} />
           </div>
           <div style={{ width:200 }}>
             <div style={{ position:'relative' }}>
               <MapPin size={14} color="var(--text-muted)" style={{ position:'absolute',left:10,top:'50%',transform:'translateY(-50%)' }} />
-              <input className="input" placeholder="Location" value={filters.location}
+              <input className="input"
+                placeholder={module.locationHint}
+                value={filters.location}
                 onChange={e => setFilters(f => ({...f,location:e.target.value}))}
-                onKeyDown={e => e.key==='Enter' && setApplied(filters)}
+                onKeyDown={e => e.key==='Enter' && (setApplied(filters), setHasSearched(true))}
                 style={{ paddingLeft:30 }} />
             </div>
           </div>
-          <button className="btn-primary" onClick={() => setApplied(filters)} style={{ flexShrink:0 }}>
+          <button className="btn-primary" onClick={() => { setApplied(filters); setHasSearched(true); }} style={{ flexShrink:0 }}>
             <Search size={15} /> Search
           </button>
         </div>
 
-        {/* Filters row */}
+        {/* Filters */}
         <div style={{ display:'flex',gap:10,marginTop:10,flexWrap:'wrap',alignItems:'center' }}>
-          <select className="input" value={filters.locationType} onChange={e => { setFilters(f=>({...f,locationType:e.target.value})); setApplied(f=>({...f,locationType:e.target.value})); }}
-            style={{ width:'auto',flex:'0 0 auto',minWidth:120,fontSize:12 }}>
+          <select className="input" value={filters.locationType}
+            onChange={e => { setFilters(f=>({...f,locationType:e.target.value})); setApplied(f=>({...f,locationType:e.target.value})); }}
+            style={{ width:'auto',flex:'0 0 auto',minWidth:130,fontSize:12 }}>
             <option value="">All Work Modes</option>
             <option value="remote">Remote</option>
             <option value="hybrid">Hybrid</option>
             <option value="onsite">On-site</option>
           </select>
-          <select className="input" value={filters.jobType} onChange={e => { setFilters(f=>({...f,jobType:e.target.value})); setApplied(f=>({...f,jobType:e.target.value})); }}
-            style={{ width:'auto',flex:'0 0 auto',minWidth:130,fontSize:12 }}>
+          <select className="input" value={filters.jobType}
+            onChange={e => { setFilters(f=>({...f,jobType:e.target.value})); setApplied(f=>({...f,jobType:e.target.value})); }}
+            style={{ width:'auto',flex:'0 0 auto',minWidth:140,fontSize:12 }}>
             <option value="">All Job Types</option>
             <option value="full-time">Full-time</option>
             <option value="contract">Contract</option>
@@ -314,12 +439,12 @@ export default function JobDiscoveryPage() {
             High match only (≥4.0)
           </label>
           <div style={{ marginLeft:'auto',fontSize:12,color:'var(--text-muted)' }}>
-            {total} jobs found
+            {total > 0 ? <><span style={{ color: module.color, fontWeight:700 }}>{total}</span> opportunities found</> : 'Search to find opportunities'}
           </div>
         </div>
       </div>
 
-      {/* Results */}
+      {/* ── Results ── */}
       {isLoading && (
         <div style={{ display:'flex',flexDirection:'column',gap:12 }}>
           {[1,2,3].map(i => <div key={i} className="skeleton" style={{ height:160,borderRadius:16 }} />)}
@@ -334,9 +459,9 @@ export default function JobDiscoveryPage() {
 
       {!isLoading && jobs.length === 0 && !error && (
         <div style={{ textAlign:'center',padding:'60px',color:'var(--text-muted)' }}>
-          <Search size={48} style={{ opacity:0.2,marginBottom:12 }} />
-          <p style={{ fontSize:16,fontWeight:600,marginBottom:4 }}>No jobs found</p>
-          <p style={{ fontSize:13 }}>Try adjusting your filters or search terms</p>
+          <div style={{ fontSize:48, marginBottom:12, opacity:0.4 }}>{module.flag}</div>
+          <p style={{ fontSize:16,fontWeight:600,marginBottom:4 }}>No opportunities found</p>
+          <p style={{ fontSize:13 }}>Try adjusting your filters or search for different roles</p>
         </div>
       )}
 
