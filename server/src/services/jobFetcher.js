@@ -7,6 +7,7 @@
 
 const axios = require('axios');
 const Job = require('../models/Job');
+const { scrapeHackerNewsJobs } = require('./customScraper');
 
 // ── Source 1: Adzuna (India — requires API key) ───────────────────────────
 const ADZUNA_APP_ID  = process.env.ADZUNA_APP_ID;
@@ -167,14 +168,15 @@ const fetchAndStoreJobs = async () => {
     console.log('🔄 Starting multi-source job sync...');
 
     // Fetch from all sources in parallel (failures in one don't stop others)
-    const [adzunaJobs, remotiveJobs, arbeitnowJobs, remoteOKJobs] = await Promise.allSettled([
+    const [adzunaJobs, remotiveJobs, arbeitnowJobs, remoteOKJobs, hnJobs] = await Promise.allSettled([
       fetchAdzuna(),
       fetchRemotive(),
       fetchArbeitnow(),
       fetchRemoteOK(),
+      scrapeHackerNewsJobs(),
     ]).then(results => results.map(r => (r.status === 'fulfilled' ? r.value : [])));
 
-    const allJobs = [...adzunaJobs, ...remotiveJobs, ...arbeitnowJobs, ...remoteOKJobs];
+    const allJobs = [...adzunaJobs, ...remotiveJobs, ...arbeitnowJobs, ...remoteOKJobs, ...hnJobs];
 
     // Deduplicate by title+company fingerprint and upsert
     let inserted = 0;
@@ -202,6 +204,7 @@ const fetchAndStoreJobs = async () => {
       remotiveJobs.length > 0 ? 'Remotive' : null,
       arbeitnowJobs.length > 0 ? 'Arbeitnow' : null,
       remoteOKJobs.length > 0 ? 'RemoteOK' : null,
+      hnJobs.length > 0 ? 'Hacker News' : null,
     ].filter(Boolean).join(', ')}, ${deleted.deletedCount} old jobs removed.`);
 
   } catch (err) {
