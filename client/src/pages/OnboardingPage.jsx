@@ -78,6 +78,14 @@ export default function OnboardingPage() {
     try {
       const { data } = await api.put('/auth/onboarding', { profile, skip: false });
       updateUser(data.user);
+      
+      // Auto-assign tier based on experience
+      const exp = profile.experience;
+      let tier = 'midlevel';
+      if (exp === 'fresher' || exp === '1-3 years') tier = 'fresher';
+      else if (exp === '10+ years') tier = 'senior';
+      localStorage.setItem('hi_career_tier', tier);
+
       toast.success('🎉 Profile complete! Welcome.');
       navigate('/');
     } catch { toast.error('Could not save profile'); }
@@ -150,9 +158,9 @@ export default function OnboardingPage() {
 
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
                 <div><label style={s}>Current / Target Title</label>
-                  <input className="input" placeholder="e.g. Cardiac Surgeon / Software Engineer" value={profile.currentTitle} onChange={e=>up('currentTitle',e.target.value)} /></div>
+                  <input className="input" placeholder="e.g. Clinical Researcher / Structural Engineer / Marketing Director" value={profile.currentTitle} onChange={e=>up('currentTitle',e.target.value)} /></div>
                 <div><label style={s}>Professional Headline</label>
-                  <input className="input" placeholder="e.g. AI Researcher | Speaker | Mentor" value={profile.headline} onChange={e=>up('headline',e.target.value)} /></div>
+                  <input className="input" placeholder="e.g. Neuroscience Researcher | Lecturer | Innovator" value={profile.headline} onChange={e=>up('headline',e.target.value)} /></div>
               </div>
               <div style={{ gridColumn:'span 2' }}>
                 <label style={s}>Sectors / Industries <span style={{ color:'var(--text-muted)', fontSize:11 }}>(select all that apply)</span></label>
@@ -309,8 +317,8 @@ export default function OnboardingPage() {
                 <div key={i} style={{ background:'var(--bg-elevated)', borderRadius:12, padding:16, marginBottom:12, position:'relative' }}>
                   <button type="button" onClick={()=>removeListItem('workExperience',i)} style={{ position:'absolute', top:10, right:10, background:'none', border:'none', cursor:'pointer', color:'var(--text-muted)' }}><X size={14} /></button>
                   <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:10 }}>
-                    <div><label style={s}>Job Title</label><input className="input" placeholder="Software Engineer" value={exp.title||''} onChange={e=>updateListItem('workExperience',i,{title:e.target.value})} /></div>
-                    <div><label style={s}>Company</label><input className="input" placeholder="Infosys / Apollo Hospital" value={exp.company||''} onChange={e=>updateListItem('workExperience',i,{company:e.target.value})} /></div>
+                    <div><label style={s}>Job Title</label><input className="input" placeholder="e.g. Senior Analyst / Lead Architect" value={exp.title||''} onChange={e=>updateListItem('workExperience',i,{title:e.target.value})} /></div>
+                    <div><label style={s}>Company</label><input className="input" placeholder="e.g. McKinsey / Novartis / Tesla" value={exp.company||''} onChange={e=>updateListItem('workExperience',i,{company:e.target.value})} /></div>
                   </div>
                   <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10, marginBottom:10 }}>
                     <div><label style={s}>Location</label><input className="input" placeholder="Bangalore" value={exp.location||''} onChange={e=>updateListItem('workExperience',i,{location:e.target.value})} /></div>
