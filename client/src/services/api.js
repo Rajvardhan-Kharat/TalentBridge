@@ -12,9 +12,12 @@ api.interceptors.response.use(
   r => r,
   err => {
     if (err.response?.status === 401) {
-      localStorage.removeItem('hi_token');
-      localStorage.removeItem('hi_user');
-      window.location.href = '/login';
+      const isAuthUrl = err.config?.url?.includes('/auth/login') || err.config?.url?.includes('/auth/register');
+      if (!isAuthUrl) {
+        localStorage.removeItem('hi_token');
+        localStorage.removeItem('hi_user');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(err);
   }
