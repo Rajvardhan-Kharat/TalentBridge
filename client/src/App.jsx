@@ -27,8 +27,8 @@ import HomePage from './pages/HomePage';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
-  if (loading) return (
-    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100vh', background:'#0a0a0f' }}>
+  if (loading && !user) return (
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100vh', background:'var(--bg-base)' }}>
       <div className="loader" style={{ width: 40, height: 40 }} />
     </div>
   );
@@ -54,8 +54,8 @@ const CompanyRoute = ({ children }) => {
 
 const AdminRoute = ({ children }) => {
   const { user, loading } = useAuth();
-  if (loading) return (
-    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100vh', background:'#0a0a0f' }}>
+  if (loading && !user) return (
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100vh', background:'var(--bg-base)' }}>
       <div className="loader" style={{ width: 40, height: 40 }} />
     </div>
   );

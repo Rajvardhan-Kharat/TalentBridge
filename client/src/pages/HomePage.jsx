@@ -9,7 +9,7 @@ export default function HomePage() {
   // If user is already logged in, redirect them to the dashboard
   if (user) return <Navigate to="/dashboard" replace />;
   
-  if (loading) return (
+  if (loading && !user) return (
     <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100vh', background:'var(--bg-base)' }}>
       <div className="loader" style={{ width: 40, height: 40 }} />
     </div>
