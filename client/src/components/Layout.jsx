@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Search, Brain, FileText, Wand2,
   Globe, Kanban, BookOpen, LogOut, Sparkles, ChevronRight,
   User, Crown, Star, FileDown, Moon, Sun, Map, Building, Zap, Shield,
-  GraduationCap, TrendingUp, RefreshCw, Flag, Globe2
+  GraduationCap, TrendingUp, RefreshCw, Flag, Globe2, Settings
 } from 'lucide-react';
 import { CAREER_TIERS, useCareerTier } from '../pages/CareerPortalSelector';
 
@@ -29,12 +29,14 @@ const navItems = [
 // Job seeker bottom links (profile + pricing)
 const seekerBottomItems = [
   { to: '/profile', icon: User,  label: 'My Profile',    sub: 'Edit & view profile' },
+  { to: '/settings',icon: Settings,label: 'Settings',    sub: 'Account & Preferences' },
   { to: '/pricing', icon: Crown, label: 'Plans & Billing', sub: 'Upgrade / manage' },
 ];
 
 const companyNavItems = [
   { to: '/company-portal', icon: Building, label: 'My Job Postings', sub: 'Manage listings' },
   { to: '/profile',        icon: User,     label: 'Company Profile', sub: 'Edit details' },
+  { to: '/settings',       icon: Settings, label: 'Settings',        sub: 'Account & Preferences' },
   { to: '/pricing',        icon: Crown,    label: 'Plans & Billing', sub: 'Upgrade / manage' },
 ];
 

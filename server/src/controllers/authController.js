@@ -146,3 +146,58 @@ exports.getPublicProfile = async (req, res, next) => {
     res.json({ success: true, user });
   } catch (err) { next(err); }
 };
+
+// @PUT /api/auth/settings
+exports.updateSettings = async (req, res, next) => {
+  try {
+    const { settings } = req.body;
+    
+    // We update settings specifically
+    const updated = await User.findByIdAndUpdate(
+      req.user._id,
+      { $set: { settings } },
+      { new: true, runValidators: false }
+    ).select('-password');
+    
+    res.json({ success: true, user: updated });
+  } catch (err) { next(err); }
+};
+
+// @PUT /api/auth/update-password
+exports.updatePassword = async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    
+    const user = await User.findById(req.user._id).select('+password');
+    if (!user || !(await user.matchPassword(currentPassword))) {
+      return res.status(401).json({ success: false, message: 'Incorrect current password' });
+    }
+    
+    user.password = newPassword;
+    await user.save();
+    
+    // We can return the user minus the password
+    const updatedUser = await User.findById(req.user._id).select('-password');
+    res.json({ success: true, user: updatedUser, message: 'Password updated successfully' });
+  } catch (err) { next(err); }
+};
+
+// @DELETE /api/auth/delete-account
+exports.deleteAccount = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id).select('+password');
+    // For security, optionally require password confirmation to delete
+    const { password } = req.body;
+    
+    if (password) {
+      if (!(await user.matchPassword(password))) {
+        return res.status(401).json({ success: false, message: 'Incorrect password' });
+      }
+    }
+    
+    await User.findByIdAndDelete(req.user._id);
+    // Optionally: Clean up associated applications, cvs, etc. (Can be done via mongoose middleware later)
+    
+    res.json({ success: true, message: 'Account deleted successfully' });
+  } catch (err) { next(err); }
+};

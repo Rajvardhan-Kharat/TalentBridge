@@ -80,8 +80,26 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('hi_user', JSON.stringify(updated));
   };
 
+  const updateSettings = async (settings) => {
+    const { data } = await api.put('/auth/settings', { settings });
+    updateUser(data.user);
+    return data;
+  };
+
+  const updatePassword = async (currentPassword, newPassword) => {
+    const { data } = await api.put('/auth/update-password', { currentPassword, newPassword });
+    updateUser(data.user);
+    return data;
+  };
+
+  const deleteAccount = async (password) => {
+    const { data } = await api.delete('/auth/delete-account', { data: { password } });
+    logout();
+    return data;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser, updateSettings, updatePassword, deleteAccount }}>
       {children}
     </AuthContext.Provider>
   );

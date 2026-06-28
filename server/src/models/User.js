@@ -184,6 +184,19 @@ const userSchema = new mongoose.Schema({
     aiSearchesToday: { type: Number, default: 0 },
   },
 
+  // ── Settings and Preferences ───────────────────────────────────────────────
+  settings: {
+    notifications: {
+      jobMatches: { type: Boolean, default: true },
+      applicationUpdates: { type: Boolean, default: true },
+      weeklyTips: { type: Boolean, default: true },
+    },
+    linkedAccounts: {
+      google: { type: Boolean, default: false },
+      linkedin: { type: Boolean, default: false },
+    }
+  },
+
   savedJobs: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Job' }],
 }, { timestamps: true });
 

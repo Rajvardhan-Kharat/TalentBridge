@@ -24,6 +24,7 @@ import PublicResumePage from './pages/PublicResumePage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import CareerPortalSelector from './pages/CareerPortalSelector';
 import HomePage from './pages/HomePage';
+import SettingsPage from './pages/SettingsPage';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -121,6 +122,7 @@ export default function App() {
         <Route path="tracker"           element={<JobseekerRoute><ApplicationTrackerPage /></JobseekerRoute>} />
         <Route path="story-bank"        element={<JobseekerRoute><StoryBankPage /></JobseekerRoute>} />
         <Route path="profile"           element={<ProfileRouteSwitch />} />
+        <Route path="settings"          element={<SettingsPage />} />
         <Route path="pricing"           element={<PricingPage />} />
         <Route path="resume"            element={<JobseekerRoute><ResumeBuilderPage /></JobseekerRoute>} />
         <Route path="learning-roadmap"  element={<JobseekerRoute><LearningRoadmapPage /></JobseekerRoute>} />
