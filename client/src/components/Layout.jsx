@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Search, Brain, FileText, Wand2,
   Globe, Kanban, BookOpen, LogOut, Sparkles, ChevronRight,
   User, Crown, Star, FileDown, Moon, Sun, Map, Building, Zap, Shield,
-  GraduationCap, TrendingUp, RefreshCw, Flag, Globe2, Settings
+  GraduationCap, TrendingUp, RefreshCw, Flag, Globe2, Settings, HelpCircle
 } from 'lucide-react';
 import { CAREER_TIERS, useCareerTier } from '../pages/CareerPortalSelector';
 
@@ -26,11 +26,11 @@ const navItems = [
   { to: '/story-bank',     icon: BookOpen,        label: 'Story Bank',       sub: 'STAR Stories' },
 ];
 
-// Job seeker bottom links (profile + pricing)
 const seekerBottomItems = [
   { to: '/profile', icon: User,  label: 'My Profile',    sub: 'Edit & view profile' },
   { to: '/settings',icon: Settings,label: 'Settings',    sub: 'Account & Preferences' },
   { to: '/pricing', icon: Crown, label: 'Plans & Billing', sub: 'Upgrade / manage' },
+  { to: '/help',    icon: HelpCircle, label: 'Help & Support', sub: 'FAQs & Contact' },
 ];
 
 const companyNavItems = [
@@ -38,6 +38,7 @@ const companyNavItems = [
   { to: '/profile',        icon: User,     label: 'Company Profile', sub: 'Edit details' },
   { to: '/settings',       icon: Settings, label: 'Settings',        sub: 'Account & Preferences' },
   { to: '/pricing',        icon: Crown,    label: 'Plans & Billing', sub: 'Upgrade / manage' },
+  { to: '/help',           icon: HelpCircle, label: 'Help & Support', sub: 'FAQs & Contact' },
 ];
 
 const PLAN_META = {

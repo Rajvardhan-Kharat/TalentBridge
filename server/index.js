@@ -31,6 +31,7 @@ app.use('/api/tools',        require('./src/routes/tools'));
 app.use('/api/subscription', require('./src/routes/subscription'));
 app.use('/api/company',      require('./src/routes/company'));
 app.use('/api/admin',        require('./src/routes/admin'));
+app.use('/api/support',      require('./src/routes/support'));
 
 // ── 404 ────────────────────────────────────────────────────────────────────
 app.use((req, res) => res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` }));
