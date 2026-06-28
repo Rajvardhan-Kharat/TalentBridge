@@ -23,6 +23,7 @@ import CompanyProfilePage from './pages/CompanyProfilePage';
 import PublicResumePage from './pages/PublicResumePage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import CareerPortalSelector from './pages/CareerPortalSelector';
+import HomePage from './pages/HomePage';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -106,9 +107,12 @@ export default function App() {
       {/* Public resume page — no login required */}
       <Route path="/resume/:userId"   element={<PublicResumePage />} />
 
-      {/* Main app — job seekers + company (company gets redirected from / to /company-portal) */}
-      <Route path="/" element={<PrivateRoute><OnboardingGuard><Layout /></OnboardingGuard></PrivateRoute>}>
-        <Route index                    element={<RoleIndexRedirect />} />
+      {/* Public Home Page */}
+      <Route path="/" element={<HomePage />} />
+
+      {/* Main app — job seekers + company (company gets redirected from /dashboard to /company-portal) */}
+      <Route element={<PrivateRoute><OnboardingGuard><Layout /></OnboardingGuard></PrivateRoute>}>
+        <Route path="dashboard"         element={<RoleIndexRedirect />} />
         <Route path="jobs"              element={<JobseekerRoute><JobDiscoveryPage /></JobseekerRoute>} />
         <Route path="evaluator"         element={<JobseekerRoute><JobEvaluatorPage /></JobseekerRoute>} />
         <Route path="cv-tailor"         element={<JobseekerRoute><CvTailoringPage /></JobseekerRoute>} />

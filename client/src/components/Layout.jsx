@@ -10,7 +10,7 @@ import {
 import { CAREER_TIERS, useCareerTier } from '../pages/CareerPortalSelector';
 
 const navItems = [
-  { to: '/',               icon: LayoutDashboard, label: 'Dashboard',        sub: 'Overview & Insights' },
+  { to: '/dashboard',               icon: LayoutDashboard, label: 'Dashboard',        sub: 'Overview & Insights' },
   // Talent Acquisition — sub-modules
   { to: '/jobs',           icon: Flag,            label: 'India Opportunities',  sub: 'Jobs across India', section: 'talent' },
   { to: '/jobs?module=global', icon: Globe2,      label: 'Global Opportunities', sub: 'International Roles', section: 'talent' },
