@@ -5,6 +5,23 @@ import api from '../services/api';
 import { Edit2, Save, X, Camera, Building, Globe, MapPin, Users, Crown } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+const Section = ({ title, sectionKey, children, editContent, editing, setEditing, saving, saveSection }) => (
+  <div className="glass" style={{ padding: 20, marginBottom: 16 }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+      <h3 style={{ fontSize: 14, fontWeight: 700 }}>{title}</h3>
+      {editing === sectionKey
+        ? <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn-ghost" style={{ fontSize: 12, padding: '4px 10px' }} onClick={() => setEditing(null)}><X size={13} /> Cancel</button>
+            <button className="btn-primary" style={{ fontSize: 12, padding: '6px 12px' }} onClick={() => saveSection(sectionKey)} disabled={saving}>
+              {saving ? <div className="loader" style={{ width: 14, height: 14 }} /> : <><Save size={13} /> Save</>}
+            </button>
+          </div>
+        : <button className="btn-ghost" style={{ fontSize: 12, padding: '4px 10px' }} onClick={() => setEditing(sectionKey)}><Edit2 size={13} /> Edit</button>}
+    </div>
+    {editing === sectionKey ? editContent : children}
+  </div>
+);
+
 const COMPANY_SIZES = ['1-10', '11-50', '51-200', '201-500', '500+'];
 
 export default function CompanyProfilePage() {
@@ -65,22 +82,7 @@ export default function CompanyProfilePage() {
     } catch { toast.error('Failed to remove logo'); }
   };
 
-  const Section = ({ title, sectionKey, children, editContent }) => (
-    <div className="glass" style={{ padding: 20, marginBottom: 16 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-        <h3 style={{ fontSize: 14, fontWeight: 700 }}>{title}</h3>
-        {editing === sectionKey
-          ? <div style={{ display: 'flex', gap: 8 }}>
-              <button className="btn-ghost" style={{ fontSize: 12, padding: '4px 10px' }} onClick={() => setEditing(null)}><X size={13} /> Cancel</button>
-              <button className="btn-primary" style={{ fontSize: 12, padding: '6px 12px' }} onClick={() => saveSection(sectionKey)} disabled={saving}>
-                {saving ? <div className="loader" style={{ width: 14, height: 14 }} /> : <><Save size={13} /> Save</>}
-              </button>
-            </div>
-          : <button className="btn-ghost" style={{ fontSize: 12, padding: '4px 10px' }} onClick={() => setEditing(sectionKey)}><Edit2 size={13} /> Edit</button>}
-      </div>
-      {editing === sectionKey ? editContent : children}
-    </div>
-  );
+
 
   const s = { fontSize: 12, fontWeight: 500, color: 'var(--text-muted)', display: 'block', marginBottom: 4 };
 
@@ -140,7 +142,7 @@ export default function CompanyProfilePage() {
       </div>
 
       {/* About Company */}
-      <Section title="About Company" sectionKey="about"
+      <Section title="About Company" sectionKey="about" editing={editing} setEditing={setEditing} saving={saving} saveSection={saveSection}
         editContent={
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div><label style={s}>Industry / Sector</label><input className="input" placeholder="e.g. Technology, Healthcare" value={profileData.industry} onChange={e => up('industry', e.target.value)} /></div>
@@ -172,7 +174,7 @@ export default function CompanyProfilePage() {
       </Section>
 
       {/* Social Links */}
-      <Section title="Links & Social" sectionKey="links"
+      <Section title="Links & Social" sectionKey="links" editing={editing} setEditing={setEditing} saving={saving} saveSection={saveSection}
         editContent={
           <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
             <div><label style={s}>Website URL</label><input className="input" placeholder="https://company.com" value={profileData.website} onChange={e => up('website', e.target.value)} /></div>

@@ -39,6 +39,23 @@ function PlanAvatar({ plan='free', avatar, name, size=80 }) {
   );
 }
 
+const Section = ({ title, sectionKey, children, editContent, editing, setEditing, saving, saveSection }) => (
+  <div className="glass" style={{ padding:20, marginBottom:16 }}>
+    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+      <h3 style={{ fontSize:14, fontWeight:700 }}>{title}</h3>
+      {editing === sectionKey
+        ? <div style={{ display:'flex', gap:8 }}>
+            <button className="btn-ghost" style={{ fontSize:12, padding:'4px 10px' }} onClick={()=>setEditing(null)}><X size={13} /> Cancel</button>
+            <button className="btn-primary" style={{ fontSize:12, padding:'6px 12px' }} onClick={()=>saveSection(sectionKey)} disabled={saving}>
+              {saving ? <div className="loader" style={{width:14,height:14}} /> : <><Save size={13} /> Save</>}
+            </button>
+          </div>
+        : <button className="btn-ghost" style={{ fontSize:12, padding:'4px 10px' }} onClick={()=>setEditing(sectionKey)}><Edit2 size={13} /> Edit</button>}
+    </div>
+    {editing === sectionKey ? editContent : children}
+  </div>
+);
+
 export default function ProfilePage() {
   const { user, updateUser } = useAuth();
   const navigate = useNavigate();
@@ -112,22 +129,7 @@ export default function ProfilePage() {
   const s = { fontSize:12, fontWeight:500, color:'var(--text-muted)', display:'block', marginBottom:4 };
   const card = { className:'glass', style:{ padding:20, marginBottom:16 } };
 
-  const Section = ({ title, sectionKey, children, editContent }) => (
-    <div className="glass" style={{ padding:20, marginBottom:16 }}>
-      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
-        <h3 style={{ fontSize:14, fontWeight:700 }}>{title}</h3>
-        {editing === sectionKey
-          ? <div style={{ display:'flex', gap:8 }}>
-              <button className="btn-ghost" style={{ fontSize:12, padding:'4px 10px' }} onClick={()=>setEditing(null)}><X size={13} /> Cancel</button>
-              <button className="btn-primary" style={{ fontSize:12, padding:'6px 12px' }} onClick={()=>saveSection(sectionKey)} disabled={saving}>
-                {saving ? <div className="loader" style={{width:14,height:14}} /> : <><Save size={13} /> Save</>}
-              </button>
-            </div>
-          : <button className="btn-ghost" style={{ fontSize:12, padding:'4px 10px' }} onClick={()=>setEditing(sectionKey)}><Edit2 size={13} /> Edit</button>}
-      </div>
-      {editing === sectionKey ? editContent : children}
-    </div>
-  );
+
 
   const addListItem = (key, item) => up(key, [...profileData[key], item]);
   const removeListItem = (key, idx) => up(key, profileData[key].filter((_,i)=>i!==idx));
@@ -202,7 +204,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Skills section */}
-      <Section title="Skills" sectionKey="skills"
+      <Section title="Skills" sectionKey="skills" editing={editing} setEditing={setEditing} saving={saving} saveSection={saveSection}
         editContent={
           <div>
             <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom:12 }}>
@@ -227,7 +229,7 @@ export default function ProfilePage() {
       </Section>
 
       {/* Basic Info */}
-      <Section title="Basic Information" sectionKey="basic"
+      <Section title="Basic Information" sectionKey="basic" editing={editing} setEditing={setEditing} saving={saving} saveSection={saveSection}
         editContent={
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
             {[
@@ -276,7 +278,7 @@ export default function ProfilePage() {
       </Section>
 
       {/* Education */}
-      <Section title="Education" sectionKey="education"
+      <Section title="Education" sectionKey="education" editing={editing} setEditing={setEditing} saving={saving} saveSection={saveSection}
         editContent={
           <div>
             {profileData.education.map((edu,i)=>(
@@ -311,7 +313,7 @@ export default function ProfilePage() {
       </Section>
 
       {/* Work Experience */}
-      <Section title="Work Experience" sectionKey="workExperience"
+      <Section title="Work Experience" sectionKey="workExperience" editing={editing} setEditing={setEditing} saving={saving} saveSection={saveSection}
         editContent={
           <div>
             {profileData.workExperience.map((exp,i)=>(
@@ -345,7 +347,7 @@ export default function ProfilePage() {
       </Section>
 
       {/* Links */}
-      <Section title="Social Links" sectionKey="links"
+      <Section title="Social Links" sectionKey="links" editing={editing} setEditing={setEditing} saving={saving} saveSection={saveSection}
         editContent={
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
             {[['linkedinUrl','LinkedIn','https://linkedin.com/in/...'],['githubUrl','GitHub','https://github.com/...'],['portfolioUrl','Portfolio','https://portfolio.com'],['websiteUrl','Website','https://yoursite.com']].map(([key,label,ph])=>(
