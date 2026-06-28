@@ -69,6 +69,22 @@ export const AuthProvider = ({ children }) => {
     return data.user;
   };
 
+  const googleLogin = async (token, role = 'jobseeker') => {
+    const { data } = await api.post('/auth/google', { token, role });
+    localStorage.setItem('hi_token', data.token);
+    localStorage.setItem('hi_user', JSON.stringify(data.user));
+    setUser(data.user);
+    return data.user;
+  };
+
+  const linkedinLogin = async (code, redirectUri, role = 'jobseeker') => {
+    const { data } = await api.post('/auth/linkedin', { code, redirectUri, role });
+    localStorage.setItem('hi_token', data.token);
+    localStorage.setItem('hi_user', JSON.stringify(data.user));
+    setUser(data.user);
+    return data.user;
+  };
+
   const logout = () => {
     localStorage.removeItem('hi_token');
     localStorage.removeItem('hi_user');
@@ -99,7 +115,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, updateUser, updateSettings, updatePassword, deleteAccount }}>
+    <AuthContext.Provider value={{ user, loading, login, googleLogin, linkedinLogin, register, logout, updateUser, updateSettings, updatePassword, deleteAccount }}>
       {children}
     </AuthContext.Provider>
   );

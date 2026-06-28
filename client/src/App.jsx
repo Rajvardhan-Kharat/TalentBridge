@@ -3,6 +3,7 @@ import { useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import LinkedInCallback from './pages/LinkedInCallback';
 import OnboardingPage from './pages/OnboardingPage';
 import DashboardPage from './pages/DashboardPage';
 import JobDiscoveryPage from './pages/JobDiscoveryPage';
@@ -98,6 +99,7 @@ export default function App() {
       <Route path="/login"            element={user ? <Navigate to="/" /> : <LoginPage />} />
       <Route path="/register"         element={user ? <Navigate to="/" /> : <RegisterPage />} />
       <Route path="/register/company" element={user ? <Navigate to="/company-portal" /> : <CompanyRegisterPage />} />
+      <Route path="/auth/linkedin/callback" element={<LinkedInCallback />} />
       <Route path="/onboarding"       element={<PrivateRoute><OnboardingPage /></PrivateRoute>} />
 
       {/* Admin dashboard — standalone page, no Layout sidebar */}

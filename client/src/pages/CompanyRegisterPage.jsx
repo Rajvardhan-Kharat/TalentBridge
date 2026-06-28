@@ -3,12 +3,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Building, User, Mail, Lock, Globe, MapPin, Users, Briefcase, ChevronRight, ChevronLeft, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useGoogleLogin } from '@react-oauth/google';
 
 const COMPANY_SIZES = ['1-10', '11-50', '51-200', '201-500', '500+'];
 const INDUSTRIES = ['Technology', 'Finance & Banking', 'Healthcare', 'E-commerce', 'Education', 'Manufacturing', 'Consulting', 'Media & Entertainment', 'Real Estate', 'Startup', 'Other'];
 
 export default function CompanyRegisterPage() {
-  const { register } = useAuth();
+  const { register, googleLogin } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -53,6 +54,27 @@ export default function CompanyRegisterPage() {
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Registration failed');
     } finally { setLoading(false); }
+  };
+
+  const handleGoogleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setLoading(true);
+      try {
+        const user = await googleLogin(tokenResponse.credential || tokenResponse.access_token, 'company');
+        toast.success(`Welcome back, ${user.name}!`);
+        navigate('/company-portal');
+      } catch (err) {
+        toast.error('Google login failed');
+      } finally { setLoading(false); }
+    },
+    onError: () => toast.error('Google login failed')
+  });
+
+  const handleLinkedInLogin = () => {
+    const clientId = import.meta.env.VITE_LINKEDIN_CLIENT_ID;
+    const redirectUri = encodeURIComponent(`${window.location.origin}/auth/linkedin/callback`);
+    const state = 'login-company';
+    window.location.href = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&state=${state}&scope=openid%20profile%20email`;
   };
 
   const inputStyle = { marginBottom: 14 };
@@ -112,7 +134,8 @@ export default function CompanyRegisterPage() {
                 <button 
                   type="button" 
                   className="btn-secondary" 
-                  onClick={() => toast('Google Sign-Up requires OAuth configuration in production.', { icon: 'ℹ️' })}
+                  onClick={() => handleGoogleLogin()}
+                  disabled={loading}
                   style={{ flex: 1, justifyContent: 'center', padding: '12px', background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" style={{ marginRight: 8 }}>
@@ -126,7 +149,8 @@ export default function CompanyRegisterPage() {
                 <button 
                   type="button" 
                   className="btn-secondary" 
-                  onClick={() => toast('LinkedIn Sign-Up requires OAuth configuration in production.', { icon: 'ℹ️' })}
+                  onClick={handleLinkedInLogin}
+                  disabled={loading}
                   style={{ flex: 1, justifyContent: 'center', padding: '12px', background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" style={{ marginRight: 8 }}>

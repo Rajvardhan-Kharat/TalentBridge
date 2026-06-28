@@ -1,5 +1,9 @@
 const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
+const axios = require('axios');
 const User = require('../models/User');
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const signToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRE });
@@ -59,6 +63,102 @@ exports.login = async (req, res, next) => {
 
     sendToken(user, 200, res);
   } catch (err) { next(err); }
+};
+
+// @POST /api/auth/google
+exports.googleLogin = async (req, res, next) => {
+  try {
+    const { token, role } = req.body; // token from google
+    if (!token) return res.status(400).json({ success: false, message: 'Google token required' });
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    const { sub, email, name, picture } = payload;
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // Create new user
+      const userRole = role === 'company' ? 'company' : 'jobseeker';
+      user = await User.create({
+        name,
+        email,
+        googleId: sub,
+        avatar: picture,
+        role: userRole,
+        onboardingComplete: userRole === 'company',
+      });
+    } else {
+      // Update existing user with googleId if missing
+      if (!user.googleId) {
+        user.googleId = sub;
+        if (!user.avatar) user.avatar = picture;
+        await user.save();
+      }
+    }
+    sendToken(user, 200, res);
+  } catch (err) { 
+    console.error('Google Auth Error:', err);
+    res.status(401).json({ success: false, message: 'Invalid Google token' }); 
+  }
+};
+
+// @POST /api/auth/linkedin
+exports.linkedinLogin = async (req, res, next) => {
+  try {
+    const { code, redirectUri, role } = req.body;
+    if (!code) return res.status(400).json({ success: false, message: 'LinkedIn authorization code required' });
+
+    // 1. Exchange code for access token
+    const tokenResponse = await axios.post('https://www.linkedin.com/oauth/v2/accessToken', null, {
+      params: {
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: redirectUri,
+        client_id: process.env.LINKEDIN_CLIENT_ID,
+        client_secret: process.env.LINKEDIN_CLIENT_SECRET,
+      },
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    });
+
+    const accessToken = tokenResponse.data.access_token;
+
+    // 2. Get User Profile (using OIDC endpoint to get email and profile)
+    const profileResponse = await axios.get('https://api.linkedin.com/v2/userinfo', {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+
+    const { sub, email, name, picture } = profileResponse.data;
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // Create new user
+      const userRole = role === 'company' ? 'company' : 'jobseeker';
+      user = await User.create({
+        name,
+        email,
+        linkedinId: sub,
+        avatar: picture,
+        role: userRole,
+        onboardingComplete: userRole === 'company',
+      });
+    } else {
+      // Update existing user with linkedinId if missing
+      if (!user.linkedinId) {
+        user.linkedinId = sub;
+        if (!user.avatar) user.avatar = picture;
+        await user.save();
+      }
+    }
+    sendToken(user, 200, res);
+  } catch (err) {
+    console.error('LinkedIn Auth Error:', err?.response?.data || err.message);
+    res.status(401).json({ success: false, message: 'LinkedIn authentication failed' });
+  }
 };
 
 // @GET /api/auth/me

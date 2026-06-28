@@ -3,11 +3,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Sparkles, Eye, EyeOff, ArrowRight, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useGoogleLogin } from '@react-oauth/google';
 
 const perks = ['Smart job matching', 'CV tailoring in seconds', '20 career tools', 'Application tracker'];
 
 export default function RegisterPage() {
-  const { register } = useAuth();
+  const { register, googleLogin } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [show, setShow] = useState(false);
@@ -24,6 +25,27 @@ export default function RegisterPage() {
     } catch (err) {
       toast.error(err.response?.data?.message || 'Registration failed');
     } finally { setLoading(false); }
+  };
+
+  const handleGoogleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setLoading(true);
+      try {
+        const user = await googleLogin(tokenResponse.credential || tokenResponse.access_token, 'jobseeker');
+        toast.success(`Welcome back, ${user.name}!`);
+        navigate(user.onboardingComplete ? '/' : '/onboarding');
+      } catch (err) {
+        toast.error('Google login failed');
+      } finally { setLoading(false); }
+    },
+    onError: () => toast.error('Google login failed')
+  });
+
+  const handleLinkedInLogin = () => {
+    const clientId = import.meta.env.VITE_LINKEDIN_CLIENT_ID;
+    const redirectUri = encodeURIComponent(`${window.location.origin}/auth/linkedin/callback`);
+    const state = 'login-jobseeker';
+    window.location.href = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&state=${state}&scope=openid%20profile%20email`;
   };
 
   return (
@@ -99,7 +121,8 @@ export default function RegisterPage() {
                 <button 
                   type="button" 
                   className="btn-secondary" 
-                  onClick={() => toast('Google Sign-Up requires OAuth configuration in production.', { icon: 'ℹ️' })}
+                  onClick={() => handleGoogleLogin()}
+                  disabled={loading}
                   style={{ flex: 1, justifyContent: 'center', padding: '12px', background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" style={{ marginRight: 8 }}>
@@ -113,7 +136,8 @@ export default function RegisterPage() {
                 <button 
                   type="button" 
                   className="btn-secondary" 
-                  onClick={() => toast('LinkedIn Sign-Up requires OAuth configuration in production.', { icon: 'ℹ️' })}
+                  onClick={handleLinkedInLogin}
+                  disabled={loading}
                   style={{ flex: 1, justifyContent: 'center', padding: '12px', background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" style={{ marginRight: 8 }}>
